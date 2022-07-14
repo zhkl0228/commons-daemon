@@ -246,12 +246,37 @@ bool java_init(arg_data *args, home_data *data)
     }
 #endif
     arg.ignoreUnrecognized = FALSE;
+    bool autoHeapSize = TRUE;
+    for (x = 0; x < args->onum; x++) {
+        if(strstr(args->opts[x], "-Xms") ||
+           strstr(args->opts[x], "-XX:InitialHeapSize") ||
+           strstr(args->opts[x], "-Xmx") ||
+           strstr(args->opts[x], "-XX:MaxHeapSize")) {
+            autoHeapSize = FALSE;
+            break;
+        }
+    }
     arg.nOptions = args->onum + 4; /* pid, ppid and abort */
+    if(autoHeapSize) {
+        arg.nOptions += 2;
+    }
     opt = (JavaVMOption *) malloc(arg.nOptions * sizeof(JavaVMOption));
     for (x = 0; x < args->onum; x++) {
         opt[x].optionString = strdup(args->opts[x]);
         jsvc_xlate_to_ascii(opt[x].optionString);
         opt[x].extraInfo = NULL;
+    }
+    if(autoHeapSize) {
+        size_t physMB = (size_t) sysconf(_SC_PHYS_PAGES) * (size_t) sysconf(_SC_PAGESIZE) / 1024 / 1024;
+        snprintf(daemonprocid, sizeof(daemonprocid), "-Xms%zuM", physMB / 2);
+        opt[x].optionString = strdup(daemonprocid);
+        jsvc_xlate_to_ascii(opt[x].optionString);
+        opt[x++].extraInfo  = NULL;
+        
+        snprintf(daemonprocid, sizeof(daemonprocid), "-Xmx%zuM", physMB * 3 / 4);
+        opt[x].optionString = strdup(daemonprocid);
+        jsvc_xlate_to_ascii(opt[x].optionString);
+        opt[x++].extraInfo  = NULL;
     }
     /* Add our daemon process id */
     snprintf(daemonprocid, sizeof(daemonprocid),
