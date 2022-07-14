@@ -258,7 +258,7 @@ bool java_init(arg_data *args, home_data *data)
     }
     arg.nOptions = args->onum + 4; /* pid, ppid and abort */
     if(autoHeapSize) {
-        arg.nOptions += 2;
+        arg.nOptions += 4;
     }
     opt = (JavaVMOption *) malloc(arg.nOptions * sizeof(JavaVMOption));
     for (x = 0; x < args->onum; x++) {
@@ -268,13 +268,23 @@ bool java_init(arg_data *args, home_data *data)
     }
     if(autoHeapSize) {
         size_t physMB = (size_t) sysconf(_SC_PHYS_PAGES) * (size_t) sysconf(_SC_PAGESIZE) / 1024 / 1024;
-        snprintf(daemonprocid, sizeof(daemonprocid), "-Xms%zuM", physMB / 2);
+        size_t maxMB = physMB * 3 / 4;
+        
+        snprintf(daemonprocid, sizeof(daemonprocid), "-XX:InitialHeapSize=%zuM", maxMB);
         opt[x].optionString = strdup(daemonprocid);
         jsvc_xlate_to_ascii(opt[x].optionString);
         opt[x++].extraInfo  = NULL;
         
-        snprintf(daemonprocid, sizeof(daemonprocid), "-Xmx%zuM", physMB * 3 / 4);
+        snprintf(daemonprocid, sizeof(daemonprocid), "-XX:MaxHeapSize=%zuM", maxMB);
         opt[x].optionString = strdup(daemonprocid);
+        jsvc_xlate_to_ascii(opt[x].optionString);
+        opt[x++].extraInfo  = NULL;
+        
+        opt[x].optionString = "-XX:NewRatio=1";
+        jsvc_xlate_to_ascii(opt[x].optionString);
+        opt[x++].extraInfo  = NULL;
+        
+        opt[x].optionString = "-XX:+UseParNewGC";
         jsvc_xlate_to_ascii(opt[x].optionString);
         opt[x++].extraInfo  = NULL;
     }
