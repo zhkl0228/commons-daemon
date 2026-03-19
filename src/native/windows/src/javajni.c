@@ -5,7 +5,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -264,6 +264,11 @@ static BOOL __apxLoadJvmDll(APXHANDLE hPool, LPCWSTR szJvmDllPath, LPCWSTR szJav
         }
     }
 
+    if (!dllJvmPath) {
+        apxLogWrite(APXLOG_MARK_ERROR "No JVM configured or found in registry. Unable to start service.");
+        return FALSE;
+    }
+
     /* Suppress the not found system popup message */
     errMode = SetErrorMode(SEM_FAILCRITICALERRORS);
 
@@ -355,7 +360,7 @@ static BOOL __apxLoadJvmDll(APXHANDLE hPool, LPCWSTR szJvmDllPath, LPCWSTR szJav
         return FALSE;
     }
 
-    /* Real voodo ... */
+    /* Real voodoo ... */
     return TRUE;
 }
 
@@ -481,8 +486,10 @@ apxDestroyJvm(DWORD dwTimeout)
         CloseHandle(hWaiter);
         return rv;
     }
-    else
+    else {
+        apxLogWrite(APXLOG_MARK_DEBUG "apxDestroyJvm No JVM so Done");
         return FALSE;
+    }
 }
 
 static BOOL __apxIsJava9()
@@ -693,7 +700,7 @@ static LPSTR __apxEvalClasspath(APXHANDLE hPool, LPCSTR szCp)
         else
             pGcp = __apxStrnCatA(hPool, NULL, JAVA_CLASSPATH, NULL);
         if (end > 0 && pPtr[end - 1] == '*') {
-            /* Last path elemet ends with star
+            /* Last path element ends with star
              * Do a globbing.
              */
             pGcp = __apxEvalPathPart(hPool, pGcp, pPtr);
@@ -1100,13 +1107,18 @@ apxJavaStart(LPAPXJAVA_THREADARGS pArgs)
     lpJava = APXHANDLE_DATA(pArgs->hJava);
     if (!lpJava)
         return FALSE;
+    if (pArgs->dwSs) {
+        /* dwSS is measured in Kb, szStackSize in bytes */
+        lpJava->szStackSize = (SIZE_T) (pArgs->dwSs * 1024);
+    }
     lpJava->dwWorkerStatus = 0;
     lpJava->hWorkerInit    = CreateEvent(NULL, FALSE, FALSE, NULL);
     lpJava->hWorkerSync    = CreateEvent(NULL, FALSE, FALSE, NULL);
     lpJava->hWorkerThread  = CreateThread(NULL,
                                           lpJava->szStackSize,
                                           __apxJavaWorkerThread,
-                                          pArgs, CREATE_SUSPENDED,
+                                          pArgs,
+                                          CREATE_SUSPENDED + STACK_SIZE_PARAM_IS_A_RESERVATION,
                                           &lpJava->iWorkerThread);
     if (IS_INVALID_HANDLE(lpJava->hWorkerThread)) {
         apxLogWrite(APXLOG_MARK_SYSERR);

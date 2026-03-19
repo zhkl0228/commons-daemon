@@ -5,7 +5,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -123,8 +123,10 @@ void help(home_data *data)
     printf("        Refer java help for possible values.\n");
     printf("    --enable-preview\n");
     printf("        Java 11 --enable-preview option. Passed as it is to JVM\n");
+    printf("    --enable-native-access=<module name>\n");
+    printf("        Java 17 --enable-native-access option. Passed as it is to JVM\n");
     printf("\njsvc (Apache Commons Daemon) " JSVC_VERSION_STRING "\n");
-    printf("Copyright (c) 1999-2022 Apache Software Foundation.\n");
+    printf("Copyright (c) 1999-2025 Apache Software Foundation.\n");
 
     printf("\n");
 }

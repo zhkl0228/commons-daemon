@@ -5,7 +5,7 @@
 # (the "License"); you may not use this file except in compliance with
 # the License.  You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#     https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,15 +28,6 @@
 #                           It will default to the
 #                           PROCESSOR_ARCHITECTURE/ARCHITEW6432 environment variables
 #                           or failing that it will default to X86.
-#                 WINVER    Compile for specified Windows version
-#                           WINXP   for Windows XP and up (default)
-#                           WIN2003 for Windows 2003 and up
-#                           VISTA   for Windows Vista and up
-#                           WIN7    for Windows 7 and up
-#                           Deprecated targets (may not even compile):
-#                               WINNT   for Windows 2000 and up
-#                               NT4     for Windows NT4 and up
-#                               WIN9X   for Windows 95, 98 and Me
 #                 BUILD     Build version
 #                           RETAIL or RELEASE (default)
 #                           DEBUG
@@ -51,6 +42,7 @@
 #           EXTRA_LIBS      Added to the common LIBS
 #           EXTRA_LFLAGS    Added to the common LFLAGS
 #           EXTRA_RCFLAGS   Added to the common RCFLAGS
+#           NO_STATIC_CRT   Disables the static hybrid CRT build strategy
 #
 # Compiler tools environment variables:
 #                 CC        C compiler  (defaults to cl.exe)
@@ -137,27 +129,9 @@ TARGET=EXE
 !ENDIF
 !ENDIF
 
-!IF !DEFINED(WINVER) || "$(WINVER)" == ""
-WINVER=WINXP
-!ENDIF
-
-
-!IF "$(WINVER)" == "WINXP"
-NMAKE_WINVER = 0x0501
-_WIN32_IE = 0x0600
-!ELSEIF "$(WINVER)" == "WIN2003"
-NMAKE_WINVER = 0x0502
-_WIN32_IE = 0x0600
-!ELSEIF "$(WINVER)" == "VISTA"
-NMAKE_WINVER = 0x0600
-_WIN32_IE = 0x0700
-!ELSEIF "$(WINVER)" == "WIN7"
-NMAKE_WINVER = 0x0601
-_WIN32_IE = 0x0800
-!ELSE
-NMAKE_WINVER = $(WINVER)
-_WIN32_IE = 0x0800
-!ENDIF
+WINVER=WIN10
+NMAKE_WINVER = 0x0A00
+_WIN32_IE = 0x0A00
 
 NMAKE_WINNT = -D_WINNT -D_WIN32_WINNT=$(NMAKE_WINVER) -DWINVER=$(NMAKE_WINVER) -D_WIN32_IE=$(_WIN32_IE)
 
@@ -203,15 +177,15 @@ MACHINE_LC=amd64
 
 !IF "$(BUILD)" == "RELEASE"
 !IF "$(CPU)" == "X86"
-OPT_CFLAGS = -O2 -Ob2 -Oy- -Zi -DNDEBUG
+OPT_CFLAGS = -O2 -Ob2 -Oy- -Zi -DNDEBUG -guard:cf
 !ELSE
-OPT_CFLAGS = -O2 -Ob2 -Zi -DNDEBUG
+OPT_CFLAGS = -O2 -Ob2 -Zi -DNDEBUG -guard:cf
 !ENDIF
 !ELSE
 OPT_CFLAGS = -Od -Zi -DDEBUG -D_DEBUG
 !ENDIF
 
-!IF DEFINED(STATIC_CRT)
+!IF !DEFINED(NO_STATIC_CRT)
 CRT_CFLAGS = -D_MT -MT
 !ELSE
 CRT_CFLAGS = -D_MT -MD
@@ -234,7 +208,7 @@ CXXFLAGS = $(EXTRA_CXXFLAGS)
 !ENDIF
 
 # Linker section
-LIBS = kernel32.lib advapi32.lib ws2_32.lib mswsock.lib ole32.lib shell32.lib rpcrt4.lib
+LIBS = kernel32.lib advapi32.lib ole32.lib shell32.lib
 # Extra libs from command line or env
 !IF DEFINED(EXTRA_LIBS)
 LIBS = $(LIBS) $(EXTRA_LIBS)
@@ -253,7 +227,10 @@ COMMON_LFLAGS = /NOLOGO
 # Always add debugging to the linker
 OPT_LFLAGS = /INCREMENTAL:NO /DEBUG
 !IF "$(BUILD)" == "RELEASE"
-OPT_LFLAGS = $(OPT_LFLAGS) /OPT:REF
+OPT_LFLAGS = $(OPT_LFLAGS) /OPT:REF /guard:cf
+!IF !DEFINED(NO_STATIC_CRT)
+OPT_LFLAGS = $(OPT_LFLAGS) /NODEFAULTLIB:libucrt.lib /DEFAULTLIB:ucrt.lib
+!ENDIF
 !ENDIF
 
 !IF "$(TARGET)" == "EXE"

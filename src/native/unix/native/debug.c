@@ -5,7 +5,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,13 +19,13 @@
 #include <unistd.h>
 #include <time.h>
 
-/* Wether debug is enabled or not */
+/* Whether debug is enabled or not */
 bool log_debug_flag = false;
 
-/* Wether SYSLOG logging (for stderr) is enable or not. */
+/* Whether SYSLOG logging (for stderr) is enable or not. */
 bool log_stderr_syslog_flag = false;
 
-/* Wether SYSLOG logging (for stdout) is enable or not. */
+/* Whether SYSLOG logging (for stdout) is enable or not. */
 bool log_stdout_syslog_flag = false;
 
 /* The name of the jsvc binary. */

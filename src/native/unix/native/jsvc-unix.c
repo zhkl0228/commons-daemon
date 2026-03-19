@@ -5,7 +5,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -566,7 +566,6 @@ static int mkdir2(const char *name, int perms)
 static int check_pid(arg_data *args)
 {
     int fd;
-    FILE *pidf;
     char buff[80];
     pid_t pidn = getpid();
     int i, pid;
@@ -589,24 +588,40 @@ retry:
         return -1;
     }
     else {
-        lockf(fd, F_LOCK, 0);
+        if (lockf(fd, F_LOCK, 0)) {
+            log_error("check_pid: Failed to lock PID file [%s] with file descriptor [%d]: %s",
+                    args->pidf, fd, strerror(errno));
+            return -1;
+        }
         i = read(fd, buff, sizeof(buff));
         if (i > 0) {
             buff[i] = '\0';
             pid = atoi(buff);
             if (kill(pid, 0) == 0) {
                 log_error("Still running according to PID file %s, PID is %d", args->pidf, pid);
-                lockf(fd, F_ULOCK, 0);
+                if (lockf(fd, F_ULOCK, 0)) {
+                    log_error("check_pid: Failed to unlock PID file [%s] with file descriptor [%d] after reading: %s",
+                            args->pidf, fd, strerror(errno));
+                }
                 close(fd);
                 return 122;
             }
         }
-        lseek(fd, SEEK_SET, 0);
-        pidf = fdopen(fd, "r+");
-        fprintf(pidf, "%d\n", (int)getpid());
-        fflush(pidf);
-        fclose(pidf);
-        lockf(fd, F_ULOCK, 0);
+        lseek(fd, 0, SEEK_SET);
+        if (ftruncate(fd, 0)) {
+            log_error("check_pid: Failed to truncate PID file [%s] with file descriptor [%d]: %s",
+                    args->pidf, fd, strerror(errno));
+        }
+        i = snprintf(buff, sizeof(buff), "%d\n", (int)getpid());
+        if (write(fd, buff, i) == -1) {
+            log_error("check_pid: Failed to write new PID to PID file [%s] with file descriptor [%d]: %s",
+                    args->pidf, fd, strerror(errno));
+        }
+        fsync(fd);
+        if (lockf(fd, F_ULOCK, 0)) {
+            log_error("check_pid: Failed to unlock PID file [%s] with file descriptor [%d]: %s",
+                    args->pidf, fd, strerror(errno));
+        }
         close(fd);
     }
     return 0;
@@ -625,7 +640,11 @@ static void remove_pid_file(arg_data *args, int pidn)
     if (fd < 0) {
         return;
     }
-    lockf(fd, F_LOCK, 0);
+    if (lockf(fd, F_LOCK, 0)) {
+        log_error("remove_pid_file: Failed to lock PID file [%s] with file descriptor [%d] for reading: %s",
+                args->pidf, fd, strerror(errno));
+        return;
+    }
     i = read(fd, buff, sizeof(buff));
     if (i > 0) {
         buff[i] = '\0';
@@ -643,7 +662,10 @@ static void remove_pid_file(arg_data *args, int pidn)
             ("remove_pid_file: pid changed (%d->%d), not removing pid file %s",
              pidn, pid, args->pidf);
     }
-    lockf(fd, F_ULOCK, 0);
+    if (lockf(fd, F_ULOCK, 0)) {
+        log_error("remove_pid_file: Failed to unlock PID file [%s] with file descriptor [%d] after reading: %s",
+                args->pidf, fd, strerror(errno));
+    }
     close(fd);
 }
 
@@ -656,16 +678,23 @@ static int get_pidf(arg_data *args, bool quiet)
     int i;
     char buff[80];
 
-    fd = open(args->pidf, O_RDONLY, 0);
+    fd = open(args->pidf, O_RDWR, 0);
     if (!quiet)
         log_debug("get_pidf: %d in %s", fd, args->pidf);
     if (fd < 0) {
         /* something has gone wrong the JVM has stopped */
         return -1;
     }
-    lockf(fd, F_LOCK, 0);
+    if (lockf(fd, F_LOCK, 0)) {
+        log_error("get_pidf: Failed to lock PID file [%s] with file descriptor [%d] for reading: %s",
+                args->pidf, fd, strerror(errno));
+        return -1;
+    }
     i = read(fd, buff, sizeof(buff));
-    lockf(fd, F_ULOCK, 0);
+    if (lockf(fd, F_ULOCK, 0)) {
+        log_error("get_pidf: Failed to unlock PID file [%s] with file descriptor [%d] after reading: %s",
+                args->pidf, fd, strerror(errno));
+    }
     close(fd);
     if (i > 0) {
         buff[i] = '\0';
@@ -754,14 +783,21 @@ static int wait_child(arg_data *args, int pid)
         }
 
         /* check if the pid file process exists */
-        fd = open(args->pidf, O_RDONLY);
+        fd = open(args->pidf, O_RDWR);
         if (fd < 0 && havejvm) {
             /* something has gone wrong the JVM has stopped */
             return 1;
         }
-        lockf(fd, F_LOCK, 0);
+        if (lockf(fd, F_LOCK, 0)) {
+            log_error("wait_child: Failed to lock PID file [%s] with file descriptor [%d] for reading: %s",
+                    args->pidf, fd, strerror(errno));
+            return 1;
+        }
         i = read(fd, buff, sizeof(buff));
-        lockf(fd, F_ULOCK, 0);
+        if (lockf(fd, F_ULOCK, 0)) {
+            log_error("wait_child: Failed to unlock PID file [%s] with file descriptor [%d] after reading: %s",
+                    args->pidf, fd, strerror(errno));
+        }
         close(fd);
         if (i > 0) {
             buff[i] = '\0';
@@ -850,7 +886,7 @@ static int child(arg_data *args, home_data *data, uid_t uid, gid_t gid)
     /* Check wether we need to dump the VM version */
     if (args->vers == true) {
         log_error("jsvc (Apache Commons Daemon) " JSVC_VERSION_STRING);
-        log_error("Copyright (c) 1999-2022 Apache Software Foundation.");
+        log_error("Copyright (c) 1999-2025 Apache Software Foundation.");
         if (java_version() != true) {
             return -1;
         }
@@ -910,7 +946,7 @@ static int child(arg_data *args, home_data *data, uid_t uid, gid_t gid)
     sigaction(SIGUSR2, &act, NULL);
     sigaction(SIGTERM, &act, NULL);
     sigaction(SIGINT, &act, NULL);
-
+    controlled = getpid ();
     log_debug("Waiting for a signal to be delivered");
     create_tmp_file(args);
     while (!stopping) {
@@ -1061,7 +1097,9 @@ static void set_output(char *outfile, char *errfile, bool redirectstdin, char *p
     int fork_needed = 0;
 
     if (redirectstdin == true) {
-        freopen("/dev/null", "r", stdin);
+        if (freopen("/dev/null", "r", stdin) == NULL) {
+            log_error("Failed to redirect stdin to /dev/null: %s", strerror(errno));
+        }
     }
 
     log_debug("redirecting stdout to %s and stderr to %s", outfile, errfile);
@@ -1072,7 +1110,9 @@ static void set_output(char *outfile, char *errfile, bool redirectstdin, char *p
     if (strcmp(outfile, "&1") == 0 && strcmp(errfile, "&2") == 0)
         return;
     if (strcmp(outfile, "SYSLOG") == 0) {
-        freopen("/dev/null", "a", stdout);
+        if (freopen("/dev/null", "a", stdout) == NULL) {
+            log_error("Failed to redirect stdout to /dev/null: %s", strerror(errno));
+        }
         /* Send stdout to syslog through a logger process */
         if (pipe(out_pipe) == -1) {
             log_error("cannot create stdout pipe: %s", strerror(errno));
@@ -1090,7 +1130,9 @@ static void set_output(char *outfile, char *errfile, bool redirectstdin, char *p
     }
 
     if (strcmp(errfile, "SYSLOG") == 0) {
-        freopen("/dev/null", "a", stderr);
+        if (freopen("/dev/null", "a", stderr) == NULL) {
+            log_error("Failed to redirect stderr to /dev/null: %s", strerror(errno));
+        }
         /* Send stderr to syslog through a logger process */
         if (pipe(err_pipe) == -1) {
             log_error("cannot create stderr pipe: %s", strerror(errno));
@@ -1308,7 +1350,7 @@ static int run_controller(arg_data *args, home_data *data, uid_t uid, gid_t gid)
      * These will be replaced in the child process.
      */
     memset(&act, '\0', sizeof(act));
-    act.sa_handler = controller;
+    act.sa_sigaction = controller;
     sigemptyset(&act.sa_mask);
     act.sa_flags = SA_RESTART | SA_NOCLDSTOP | SA_SIGINFO;
 
@@ -1331,6 +1373,11 @@ static int run_controller(arg_data *args, home_data *data, uid_t uid, gid_t gid)
         /* We are in the controller, we have to forward all interesting signals
            to the child, and wait for it to die */
         controlled = pid;
+
+#ifdef OS_FREEBSD
+        /* Rename controller process to include JVM child PID */
+        setproctitle("%s[%d]", args->procname, pid);
+#endif
 
 #ifdef OS_CYGWIN
         SetTerm(cygwincontroller);

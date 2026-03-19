@@ -6,7 +6,7 @@ dnl The ASF licenses this file to You under the Apache License, Version 2.0
 dnl (the "License"); you may not use this file except in compliance with
 dnl the License.  You may obtain a copy of the License at
 dnl
-dnl     http://www.apache.org/licenses/LICENSE-2.0
+dnl     https://www.apache.org/licenses/LICENSE-2.0
 dnl
 dnl Unless required by applicable law or agreed to in writing, software
 dnl distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,7 +28,7 @@ AC_PREREQ(2.53)
 sinclude(./support/apfunctions.m4)dnl
 sinclude(./support/apjava.m4)dnl
 sinclude(./support/apsupport.m4)dnl
-AC_INIT(configure.in)
+AC_INIT(configure.ac)
 AC_CONFIG_AUX_DIR(./support)
 
 dnl Generate ./config.nice for reproducing runs of configure
@@ -95,9 +95,9 @@ AP_FIND_JAVA_OS()
 if test -z "${JAVA_OS}"
 then
   AC_MSG_RESULT([jni_md.h found in $JAVA_HOME/$JAVA_INC])
-  INCLUDES="$INCLUDES -I$JAVA_HOME/include -I$JAVA_HOME/$JAVA_INC"
+  INCLUDES="$INCLUDES -I$JAVA_HOME/$JAVA_INC"
 else
-  INCLUDES="$INCLUDES -I$JAVA_HOME/include -I$JAVA_HOME/include/$supported_os"
+  INCLUDES="$INCLUDES -I$JAVA_HOME/$JAVA_INC -I$JAVA_HOME/$JAVA_INC/$JAVA_OS"
 fi
 
 dnl -------------------------------------------------------------------------
@@ -135,7 +135,8 @@ dnl -------------------------------------------------------------------------
 dnl Random programs we need to compile locally
 dnl -------------------------------------------------------------------------
 AP_MSG_HEADER([Writing output files])
-AC_OUTPUT(Makefile Makedefs native/Makefile)
+AC_CONFIG_FILES(Makefile Makedefs native/Makefile)
+AC_OUTPUT
 
 dnl -------------------------------------------------------------------------
 dnl Done

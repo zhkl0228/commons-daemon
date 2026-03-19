@@ -5,7 +5,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,10 +28,10 @@
  * Minor API changes that do not cause binary compatibility problems.
  * Should be reset to 0 when upgrading JSVC_MAJOR_VERSION
  */
-#define JSVC_MINOR_VERSION      3
+#define JSVC_MINOR_VERSION      5
 
 /** patch level */
-#define JSVC_PATCH_VERSION      2
+#define JSVC_PATCH_VERSION      1
 
 /**
  *  This symbol is defined for internal, "development" copies of JSVC.

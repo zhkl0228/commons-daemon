@@ -6,7 +6,7 @@
  *  (the "License"); you may not use this file except in compliance with
  *  the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  *  Unless required by applicable law or agreed to in writing, software
  *  distributed under the License is distributed on an "AS IS" BASIS,
@@ -31,23 +31,25 @@ import org.apache.commons.daemon.DaemonContext;
  * standard applications as daemons.
  * The applications must have the mechanism to manage
  * the application lifecycle.
- *
  */
 public class DaemonWrapper implements Daemon
 {
 
-    private final static String ARGS            = "args";
-    private final static String START_CLASS     = "start";
-    private final static String START_METHOD    = "start.method";
-    private final static String STOP_CLASS      = "stop";
-    private final static String STOP_METHOD     = "stop.method";
-    private final static String STOP_ARGS       = "stop.args";
+    private static final String ARGS            = "args";
+    private static final String START_CLASS     = "start";
+    private static final String START_METHOD    = "start.method";
+    private static final String STOP_CLASS      = "stop";
+    private static final String STOP_METHOD     = "stop.method";
+    private static final String STOP_ARGS       = "stop.args";
     private String              configFileName;
     private final DaemonConfiguration config;
 
     private final Invoker             startup;
     private final Invoker             shutdown;
 
+    /**
+     * Constructs a new initialized instance.
+     */
     public DaemonWrapper()
     {
         config   = new DaemonConfiguration();
@@ -189,7 +191,7 @@ public class DaemonWrapper implements Daemon
     public void destroy()
     {
         // Nothing for the moment
-        System.err.println("DaemonWrapper: instance " + this.hashCode() + " destroy");
+        System.err.println("DaemonWrapper: instance " + hashCode() + " destroy");
     }
 
     // Internal class for wrapping the start/stop methods

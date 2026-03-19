@@ -5,7 +5,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -156,13 +156,13 @@ apxServiceOpen(APXHANDLE hService, LPCWSTR szServiceName, DWORD dwOptions)
     if (!apxGetServiceDescriptionW(szServiceName,
                                    lpService->stServiceEntry.szServiceDescription,
                                    SIZ_DESLEN)) {
-        apxLogWrite(APXLOG_MARK_WARN "Failed to obtain service description for '%s'", szServiceName);
+        apxLogWrite(APXLOG_MARK_WARN "Failed to obtain service description for '%S'", szServiceName);
         lpService->stServiceEntry.szServiceDescription[0] = L'\0';
     }
     if (!apxGetServiceUserW(szServiceName,
                             lpService->stServiceEntry.szObjectName,
                             SIZ_RESLEN)) {
-        apxLogWrite(APXLOG_MARK_WARN "Failed to obtain service user name for '%s'", szServiceName);
+        apxLogWrite(APXLOG_MARK_WARN "Failed to obtain service user name for '%S'", szServiceName);
         lpService->stServiceEntry.szObjectName[0] = L'\0';
     }
     if (!QueryServiceConfigW(lpService->hService, NULL, 0, &dwNeeded)) {
@@ -280,6 +280,7 @@ apxServiceSetNames(APXHANDLE hService,
 
 BOOL
 apxServiceSetOptions(APXHANDLE hService,
+    LPCWSTR lpDependencies,
     DWORD dwServiceType,
     DWORD dwStartType,
     BOOL bDelayedStart,
@@ -307,16 +308,17 @@ apxServiceSetOptions(APXHANDLE hService,
 
     if (!ChangeServiceConfig(lpService->hService, dwServiceType,
                                    dwStartType, dwErrorControl,
-                                   NULL, NULL, NULL, NULL, NULL,
-                                   NULL, NULL)) {
-        apxLogWrite(APXLOG_MARK_WARN "Can't set options for service: Failed to changes the configuration parameters.");
+                                   NULL, NULL, NULL,
+                                   lpDependencies,
+                                   NULL, NULL, NULL)) {
+        apxLogWrite(APXLOG_MARK_WARN "Can't set options for service: Failed to change the configuration parameters.");
     	return FALSE;
     }
 
     if (dwStartType == SERVICE_AUTO_START) {
     	sDelayedInfo.fDelayedAutostart = bDelayedStart;
         if (!ChangeServiceConfig2A(lpService->hService, SERVICE_CONFIG_DELAYED_AUTO_START_INFO, &sDelayedInfo)) {
-            apxLogWrite(APXLOG_MARK_WARN "Can't set options for service: Failed to changes the optional configuration parameters.");
+            apxLogWrite(APXLOG_MARK_WARN "Can't set options for service: Failed to change the optional configuration parameters.");
             return FALSE;
         }
     }
@@ -467,7 +469,7 @@ apxServiceControl(APXHANDLE hService, DWORD dwControl, UINT uMsg,
         default:
             break;
     }
-    /* user defined controls */
+    /* user-defined controls */
     if (dwControl > 127 && dwControl < 224) {
         /* 128 ... 159  start signals
          * 160 ... 191  stop signals
@@ -565,7 +567,7 @@ apxServiceControl(APXHANDLE hService, DWORD dwControl, UINT uMsg,
                 break;
         }
     }
-    /* signal that we are done with controling the service */
+    /* signal that we are done with controlling the service */
     if (fnControlCallback)
         (*fnControlCallback)(lpCbData, uMsg, (WPARAM)3, (LPARAM)0);
     /* Check if we are in the desired state */
@@ -603,7 +605,7 @@ apxServiceControl(APXHANDLE hService, DWORD dwControl, UINT uMsg,
     return FALSE;
 }
 
-/* Wait one second and check that the service has stopped, returns TRUE if stopped FASE otherwise */
+/* Wait one second and check that the service has stopped, returns TRUE if stopped FALSE otherwise */
 BOOL
 apxServiceCheckStop(APXHANDLE hService)
 {
@@ -684,11 +686,34 @@ apxServiceInstall(APXHANDLE hService, LPCWSTR szServiceName,
     lpService->stServiceEntry.lpConfig = NULL;
     AplZeroMemory(&lpService->stServiceEntry, sizeof(APXSERVENTRY));
 
-    if (lpDependencies)
-        lpDependencies = apxMultiSzCombine(NULL, lpDependencies,
-                                           L"Tcpip\0Afd\0", NULL);
-    else
+    if (lpDependencies) {
+        /* Only add Tcpip and Afd if not already present. */
+        BOOL needTcpip = TRUE;
+        BOOL needAfd = TRUE;
+        LPCWSTR p = lpDependencies;
+        while (*p && (needTcpip || needAfd)) {
+            if (lstrcmpiW(p, L"Tcpip") == 0) {
+                needTcpip = FALSE;
+            }
+            if (lstrcmpiW(p, L"Afd") == 0) {
+                needAfd = FALSE;
+            }
+            while (*p) {
+                p++;
+            }
+            p++;
+        }
+        if (needTcpip) {
+            lpDependencies = apxMultiSzCombine(NULL, lpDependencies,
+                                               L"Tcpip\0", NULL);
+        }
+        if (needAfd) {
+            lpDependencies = apxMultiSzCombine(NULL, lpDependencies,
+                                               L"Afd\0", NULL);
+        }
+    } else {
         lpDependencies = L"Tcpip\0Afd\0";
+    }
 
     if ((dwServiceType & SERVICE_INTERACTIVE_PROCESS) == SERVICE_INTERACTIVE_PROCESS) {
         // Caller is responsible for checking the user is set appropriately

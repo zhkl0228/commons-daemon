@@ -3,56 +3,61 @@ Configuring and Building Apache Commons Daemon on Windows
 
 Using Visual Studio, you can build Apache Commons Daemon.
 The Makefile make file has a bunch of documentation about its
-options, but a trivial build is simply;
+options, but a trivial build is simply:
+
+All builds
+
+Set the JAVA_HOME environment variable to point to a Java 8 (or later) JDK.
 
 Windows X64 Build
 
+  For MVS under "C:\Program Files (x86)":
   "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+  
+  For MVS under "C:\Program Files":
+  "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
+  
   nmake CPU=X64
 
 Windows X86 Build
 
+  For MVS under "C:\Program Files (x86)":
+  "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars32.bat"
+  
+  For MVS under "C:\Program Files":
+  "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars.bat"
+  
   nmake CPU=X86
+
+
+Additional configuration
+========================
+
+Specifying the installation location (defaults to .\..\..\..\..\..\target which
+places the binary in the correct location for a release build):
+
   nmake CPU=X86 PREFIX=c:\desired\path\of\daemon install
 
+To disable the 'Static Hybrid CRT' build strategy and prevent the the resulting
+binaries from working on a clean Windows installation with no additional
+dependencies:
 
+  nmake CPU=X86 NO_STATIC_CRT=true
+  
+  
 Release Builds
 ==============
 
-We jump through some additional hoops for release builds to avoid additional
-dependencies over and above those DLLs that are known to be present on every
-Windows install. If you build the binaries with a recent version of Visual
-Studio then it is likely the resulting binaries will have additional
-dependencies. You can check this with the Depends.exe tool provided with Visual
-Studio.
-
-Release builds are build with Mladen Turk's (mturk) Custom Microsoft Compiler
-Toolkit Compilation. This can be obtained from:
-https://github.com/mturk/cmsc
-Version: 15.0.44
-
-Later versions of CMSC should also work.
-
-A detailed description of the full environment used for recent release builds is
-provided at:
-https://cwiki.apache.org/confluence/display/TOMCAT/Common+Native+Build+Environment
-
-The steps to produce the Windows binaries is then:
-
-1. cd $GIT_CLONE_DIR\src\native\windows\apps\prunmgr
-
-2. $CMSC_ROOT\setenv.bat x86
-
-3. nmake -f Makefile
-
-4. cd ..\prunsrv
-
-5. nmake -f Makefile
-
-6. $CMCS_ROOT\setenv.bat x64
-
-7. nmake -f Makefile
-
+Release builds must not disable the static hybrid CRT build strategy.
 
 It is not necessary to build a 64-bit version of prunmgr since the 32-bit
 version works with both 32-bit and 64-bit services.
+
+
+Code signing
+============
+
+The Windows binaries are signed using the ASF's code signing service. For
+details of the service and instructions on how new release managers can request
+access to the service see:
+https://infra.apache.org/code-signing-access.html

@@ -5,7 +5,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -426,6 +426,10 @@ static arg_data *parse(int argc, char *argv[])
         else if (!strncmp(argv[x], "--enable-preview", 16)) {
             args->opts[args->onum++] = strdup(argv[x]);
         }
+        /* Java 17 specific options */
+        else if (!strncmp(argv[x], "--enable-native-access=", 23)) {
+            args->opts[args->onum++] = strdup(argv[x]);
+        }
         else if (*argv[x] == '-') {
             log_error("Invalid option %s", argv[x]);
             return NULL;
@@ -450,35 +454,29 @@ static arg_data *parse(int argc, char *argv[])
 
 static const char *IsYesNo(bool par)
 {
-    switch (par) {
-        case false:
-            return "No";
-        case true:
-            return "Yes";
+    if (par) {
+        return "Yes";
+    } else {
+        return "No";
     }
-    return "[Error]";
 }
 
 static const char *IsTrueFalse(bool par)
 {
-    switch (par) {
-        case false:
-            return "False";
-        case true:
-            return "True";
+    if (par) {
+        return "True";
+    } else {
+        return "False";
     }
-    return "[Error]";
 }
 
 static const char *IsEnabledDisabled(bool par)
 {
-    switch (par) {
-        case true:
-            return "Enabled";
-        case false:
-            return "Disabled";
+    if (par) {
+        return "Enabled";
+    } else {
+        return "Disabled";
     }
-    return "[Error]";
 }
 
 /* Main entry point: parse command line arguments and dump them */

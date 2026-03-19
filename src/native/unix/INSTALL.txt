@@ -2,8 +2,8 @@ To build the service libraries and binary under an UNIX operating
 system you will need:
 
   An ANSI-C compliant compiler (GCC is good)
-  A Java Platform 2 compliant SDK
-  GNU AutoConf (when building from Git).
+  Java 8 or later JDK
+  GNU Autotools (when building from Git).
 
 When building from Git you need to build the "configure" program with:
 
@@ -12,7 +12,7 @@ When building from Git you need to build the "configure" program with:
 
 Once the configure script is generated, run it (remember to specify
 either the --with-java=<dir> parameter or set the JAVA_HOME environment
-to point to your JDK installation. For example:
+to point to your JDK installation). For example:
 
   ./configure --with-java=/usr/java
 
@@ -25,12 +25,12 @@ or
 Note: On Mac OS X <dir> is /System/Library/Frameworks/JavaVM.framework/Home.
 
 Depending on your JDK layout, configure might fail to find the JNI
-machine dependant include file (jni_md.h). If that's the case use the
+machine dependent include file (jni_md.h). If that's the case use the
 --with-os-type=<subdir> parameter where subdir points to the directory
 within JDK include directory containing jni_md.h file.
 
 
-If your operating system is supported, configure will go thru cleanly,
+If your operating system is supported, configure will go through cleanly,
 otherwise it will report an error (please send us the details of your
 OS/JDK, or a patch against the sources).
 

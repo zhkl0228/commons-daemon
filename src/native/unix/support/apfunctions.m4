@@ -6,7 +6,7 @@ dnl The ASF licenses this file to You under the Apache License, Version 2.0
 dnl (the "License"); you may not use this file except in compliance with
 dnl the License.  You may obtain a copy of the License at
 dnl
-dnl     http://www.apache.org/licenses/LICENSE-2.0
+dnl     https://www.apache.org/licenses/LICENSE-2.0
 dnl
 dnl Unless required by applicable law or agreed to in writing, software
 dnl distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,18 +15,18 @@ dnl See the License for the specific language governing permissions and
 dnl limitations under the License.
 dnl
 
-AC_DEFUN(AP_MSG_HEADER,[
+AC_DEFUN([AP_MSG_HEADER],[
   printf "*** %s ***\n" "$1" 1>&2
   AC_PROVIDE([$0])
 ])
 
-AC_DEFUN(AP_CANONICAL_HOST_CHECK,[
+AC_DEFUN([AP_CANONICAL_HOST_CHECK],[
   AC_MSG_CHECKING([cached host system type])
   if { test x"${ac_cv_host_system_type+set}" = x"set"  &&
        test x"$ac_cv_host_system_type" != x"$host" ; }
   then
     AC_MSG_RESULT([$ac_cv_host_system_type])
-    AC_MSG_ERROR([remove the \"$cache_file\" file and re-run configure])
+    AC_MSG_ERROR([remove the "$cache_file" file and re-run configure])
   else
     AC_MSG_RESULT(ok)
     ac_cv_host_system_type="$host"

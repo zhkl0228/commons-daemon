@@ -6,7 +6,7 @@
  *  (the "License"); you may not use this file except in compliance with
  *  the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  *  Unless required by applicable law or agreed to in writing, software
  *  distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,6 +24,7 @@ import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Enumeration;
@@ -36,11 +37,11 @@ import org.apache.commons.daemon.DaemonInitException;
 
 public class SimpleDaemon implements Daemon, Runnable {
 
-    private ServerSocket server=null;
-    private Thread thread=null;
-    private DaemonController controller=null;
-    private volatile boolean stopping=false;
-    private String directory=null;
+    private ServerSocket server;
+    private Thread thread;
+    private DaemonController controller;
+    private volatile boolean stopping;
+    private String directory;
     private final Vector<Handler> handlers;
 
     public static native void toto();
@@ -63,52 +64,52 @@ public class SimpleDaemon implements Daemon, Runnable {
      */
     @Override
     public void init(DaemonContext context)
-    throws Exception {
-        System.err.println("SimpleDaemon: instance "+this.hashCode()+
-                           " init");
+            throws Exception {
+        System.err.println("SimpleDaemon: instance " + this.hashCode() + " init");
 
-        int port=1200;
+        int port = 1200;
 
         String[] a = context.getArguments();
         try {
-            if ( a.length > 0)
-                port=Integer.parseInt(a[0]);
-        }
-        catch (NumberFormatException ex) {
+            if (a.length > 0)
+                port = Integer.parseInt(a[0]);
+        } catch (NumberFormatException ex) {
             throw new DaemonInitException("parsing port", ex);
         }
-        if (a.length>1) this.directory=a[1];
-        else this.directory="/tmp";
+        if (a.length > 1)
+            this.directory = a[1];
+        else
+            this.directory = "/tmp";
 
-        /* Dump a message */
-        System.err.println("SimpleDaemon: loading on port "+port);
+        // Dump a message
+        System.err.println("SimpleDaemon: loading on port " + port);
 
-        /* Set up this simple daemon */
-        this.controller=context.getController();
-        this.server=new ServerSocket(port);
-        this.thread=new Thread(this);
+        // Set up this simple daemon
+        this.controller = context.getController();
+        this.server = new ServerSocket(port);
+        this.thread = new Thread(this);
     }
 
     @Override
     public void start() {
-        /* Dump a message */
+        // Dump a message
         System.err.println("SimpleDaemon: starting");
 
-        /* Start */
+        // Start
         this.thread.start();
     }
 
     @Override
     public void stop()
     throws IOException, InterruptedException {
-        /* Dump a message */
+        // Dump a message
         System.err.println("SimpleDaemon: stopping");
 
-        /* Close the ServerSocket. This will make our thread to terminate */
-        this.stopping=true;
+        // Close the ServerSocket. This will make our thread to terminate
+        this.stopping = true;
         this.server.close();
 
-        /* Wait for the main thread to exit and dump a message */
+        // Wait for the main thread to exit and dump a message
         this.thread.join(5000);
         System.err.println("SimpleDaemon: stopped");
     }
@@ -125,20 +126,20 @@ public class SimpleDaemon implements Daemon, Runnable {
 
         System.err.println("SimpleDaemon: started acceptor loop");
         try {
-            while(!this.stopping) {
-                Socket socket=this.server.accept();
-                Handler handler=new Handler(socket,this,this.controller);
+            while (!this.stopping) {
+                Socket socket = this.server.accept();
+                Handler handler = new Handler(socket, this, this.controller);
                 handler.setConnectionNumber(number++);
                 handler.setDirectoryName(this.directory);
                 new Thread(handler).start();
             }
         } catch (IOException e) {
-            /* Don't dump any error message if we are stopping. A IOException
-               is generated when the ServerSocket is closed in stop() */
+            // Don't dump any error message if we are stopping. A IOException
+            // is generated when the ServerSocket is closed in stop()
             if (!this.stopping) e.printStackTrace(System.err);
         }
 
-        /* Terminate all handlers that at this point are still open */
+        // Terminate all handlers that at this point are still open
         Enumeration<Handler> openhandlers = this.handlers.elements();
         while (openhandlers.hasMoreElements()) {
             Handler handler = openhandlers.nextElement();
@@ -166,32 +167,30 @@ public class SimpleDaemon implements Daemon, Runnable {
 
         private final DaemonController controller;
         private final SimpleDaemon parent;
-        private String directory=null; // Only set before thread is started
+        private String directory; // Only set before thread is started
         private final Socket socket;
-        private int number=0; // Only set before thread is started
+        private int number; // Only set before thread is started
 
         public Handler(Socket s, SimpleDaemon p, DaemonController c) {
             super();
-            this.socket=s;
-            this.parent=p;
-            this.controller=c;
+            this.socket = s;
+            this.parent = p;
+            this.controller = c;
         }
 
         @Override
         public void run() {
             this.parent.addHandler(this);
-            System.err.println("SimpleDaemon: connection "+this.number+
-                               " opened from "+this.socket.getInetAddress());
+            System.err.println("SimpleDaemon: connection " + this.number + " opened from " + this.socket.getInetAddress());
             try {
-                InputStream in=this.socket.getInputStream();
-                OutputStream out=this.socket.getOutputStream();
-                handle(in,out);
+                InputStream in = this.socket.getInputStream();
+                OutputStream out = this.socket.getOutputStream();
+                handle(in, out);
                 this.socket.close();
             } catch (IOException e) {
                 e.printStackTrace(System.err);
             }
-            System.err.println("SimpleDaemon: connection "+this.number+
-                               " closed");
+            System.err.println("SimpleDaemon: connection " + this.number + " closed");
             this.parent.removeHandler(this);
         }
 
@@ -212,18 +211,17 @@ public class SimpleDaemon implements Daemon, Runnable {
         }
 
         public void setDirectoryName(String directory) {
-            this.directory=directory;
+            this.directory = directory;
         }
 
         public String getDirectoryName() {
             return(this.directory);
         }
 
-        public void createFile(String name)
-        throws IOException {
-            OutputStream file=new FileOutputStream(name,true);
-            PrintStream out=new PrintStream(file);
-            SimpleDateFormat fmt=new SimpleDateFormat();
+        public void createFile(String name) throws IOException {
+            OutputStream file = new FileOutputStream(name, true);
+            PrintStream out = new PrintStream(file);
+            SimpleDateFormat fmt = new SimpleDateFormat();
 
             out.println(fmt.format(new Date()));
             out.close();
@@ -234,24 +232,24 @@ public class SimpleDaemon implements Daemon, Runnable {
         throws IOException {
             File file = new File(name);
             boolean ok = file.mkdirs();
-            if(! ok)
+            if (!ok)
                 throw new IOException("mkdirs for "+name+" failed");
             createFile(name);
         }
 
         public void handle(InputStream in, OutputStream os) {
-            PrintStream out=null;
+            PrintStream out = null;
             try {
-                out=new PrintStream(os, true, "US-ASCII");
+                out = new PrintStream(os, true, StandardCharsets.US_ASCII.name());
             } catch (UnsupportedEncodingException ex) {
-              out=new PrintStream(os, true);
+              out = new PrintStream(os, true);
             }
 
             while(true) {
                 try {
-                    /* If we don't have data in the System InputStream, we want
-                       to ask to the user for an option. */
-                    if (in.available()==0) {
+                    // If we don't have data in the System InputStream, we want
+                    // to ask to the user for an option.
+                    if (in.available() == 0) {
                         out.println();
                         out.println("Please select one of the following:");
                         out.println("    1) Shutdown");
@@ -263,15 +261,15 @@ public class SimpleDaemon implements Daemon, Runnable {
                         out.print("Your choice: ");
                     }
 
-                    /* Read an option from the client */
-                    int x=in.read();
+                    // Read an option from the client
+                    int x = in.read();
 
                     switch (x) {
-                        /* If the socket was closed, we simply return */
+                        // If the socket was closed, we simply return
                         case -1:
                             return;
 
-                        /* Attempt to shutdown */
+                        // Attempt to shutdown
                         case '1':
                             out.println("Attempting a shutdown...");
                             try {
@@ -283,7 +281,7 @@ public class SimpleDaemon implements Daemon, Runnable {
                             }
                             break;
 
-                        /* Attempt to reload */
+                        // Attempt to reload
                         case '2':
                             out.println("Attempting a reload...");
                             try {
@@ -295,7 +293,7 @@ public class SimpleDaemon implements Daemon, Runnable {
                             }
                             break;
 
-                        /* Create a file */
+                        // Create a file
                         case '3':
                             String name=this.getDirectoryName()+
                                         "/SimpleDaemon."+
@@ -309,18 +307,18 @@ public class SimpleDaemon implements Daemon, Runnable {
                             }
                             break;
 
-                        /* Disconnect */
+                        // Disconnect
                         case '4':
                             out.println("Disconnecting...");
                             return;
 
-                        /* Crash JVM in a native call: It need an so file ;-) */
+                        // Crash JVM in a native call: It need an so file ;-)
                         case '5':
                             System.load(System.getProperty("native.library", "./Native.so"));
                             toto();
                             break;
 
-                        /* Create a directory (PR 30177 with 1.4.x and 1.5.0 */
+                        // Create a directory (PR 30177 with 1.4.x and 1.5.0
                         case '6':
                             String name1=this.getDirectoryName()+
                                         "/a/b/c/d/e"+
@@ -335,20 +333,19 @@ public class SimpleDaemon implements Daemon, Runnable {
                             }
                             break;
 
-
-                        /* Discard any carriage return / newline characters */
+                        // Discard any carriage return / newline characters
                         case '\r':
                         case '\n':
                             break;
 
-                        /* We got something that we weren't supposed to get */
+                        // We got something that we weren't supposed to get
                         default:
                             out.println("Unknown option '"+(char)x+"'");
                             break;
 
                     }
 
-                /* If we get an IOException we return (disconnect) */
+                // If we get an IOException we return (disconnect)
                 } catch (IOException e) {
                     System.err.println("SimpleDaemon: IOException in "+
                                        "connection "+

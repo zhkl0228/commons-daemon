@@ -5,7 +5,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -99,7 +99,7 @@ typedef _W64 int            intptr_t;
 #define SIZ_HUGLEN         8192
 #define SIZ_HUGMAX         (SIZ_HUGLEN -1)
 #define SIZ_PATHLEN        4096
-#define SIZ_PATHMAX        4095
+#define SIZ_PATHMAX        (SIZ_PATHLEN -1)
 
 #include "handles.h"
 #include "log.h"

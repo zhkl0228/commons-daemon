@@ -7,7 +7,7 @@
 # (the "License"); you may not use this file except in compliance with
 # the License.  You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#     https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,7 +16,7 @@
 # limitations under the License.
 #
 # Small shell script to show how to start the sample services.
-# That is for linux, if your are using cygwin look to ServiceDaemon.sh.
+# That is for Linux, if your are using cygwin look to ServiceDaemon.sh.
 #
 # Adapt the following lines to your configuration
 JAVA_HOME=`echo $JAVA_HOME`

@@ -6,7 +6,7 @@
  *  (the "License"); you may not use this file except in compliance with
  *  the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  *  Unless required by applicable law or agreed to in writing, software
  *  distributed under the License is distributed on an "AS IS" BASIS,
@@ -84,10 +84,6 @@ import java.util.StringTokenizer;
 public final class DaemonPermission extends Permission
 {
 
-    /* ====================================================================
-     * Constants.
-     */
-
     private static final long serialVersionUID = -8682149075879731987L;
 
     /**
@@ -155,27 +151,21 @@ public final class DaemonPermission extends Permission
      */
     protected static final String WILDCARD = "*";
 
-    /* ====================================================================
-     * Instance variables
-     */
-
     /** The type of this permission object. */
     private transient int type;
+
     /** The permission mask associated with this permission object. */
     private transient int mask;
+
     /** The String representation of this permission object. */
     private transient String desc;
-
-    /* ====================================================================
-     * Constructors
-     */
 
     /**
      * Creates a new {@code DaemonPermission} instance with a specified
      * permission name.
      * <p>
      * This constructor will create a new {@code DaemonPermission}
-     * instance that <b>will not</b> grant any permission to the caller.
+     * instance that <strong>will not</strong> grant any permission to the caller.
      *
      * @param target The target name of this permission.
      * @throws IllegalArgumentException If the specified target name is not
@@ -184,7 +174,7 @@ public final class DaemonPermission extends Permission
     public DaemonPermission(final String target)
         throws IllegalArgumentException
     {
-        // Setup the target name of this permission object.
+        // Set up the target name of this permission object.
         super(target);
 
         // Check if the permission target name was specified
@@ -221,13 +211,9 @@ public final class DaemonPermission extends Permission
 
         // Create the appropriate mask if this is a control permission.
         if (this.type == TYPE_CONTROL) {
-            this.mask = this.createControlMask(actions);
+            this.mask = createControlMask(actions);
         }
     }
-
-    /* ====================================================================
-     * Public methods
-     */
 
     /**
      * Returns the list of actions permitted by this instance of
@@ -239,7 +225,7 @@ public final class DaemonPermission extends Permission
     public String getActions()
     {
         if (this.type == TYPE_CONTROL) {
-            return this.createControlActions(this.mask);
+            return createControlActions(this.mask);
         }
         return "";
     }
@@ -252,14 +238,14 @@ public final class DaemonPermission extends Permission
     @Override
     public int hashCode()
     {
-        this.setupDescription();
+        setupDescription();
         return this.desc.hashCode();
     }
 
     /**
      * Checks if a specified object equals {@code DaemonPermission}.
      *
-     * @return <b>true</b> or <b>false</b> wether the specified object equals
+     * @return <strong>true</strong> or <strong>false</strong> whether the specified object equals
      *         this {@code DaemonPermission} instance or not.
      */
     @Override
@@ -285,7 +271,7 @@ public final class DaemonPermission extends Permission
      * Checks if this {@code DaemonPermission} implies another
      * {@code Permission}.
      *
-     * @return <b>true</b> or <b>false</b> wether the specified permission
+     * @return <strong>true</strong> or <strong>false</strong> whether the specified permission
      *         is implied by this {@code DaemonPermission} instance or
      *         not.
      */
@@ -317,13 +303,9 @@ public final class DaemonPermission extends Permission
     @Override
     public String toString()
     {
-        this.setupDescription();
+        setupDescription();
         return this.desc;
     }
-
-    /* ====================================================================
-     * Private methods
-     */
 
     /**
      * Creates a String description for this permission instance.
@@ -346,7 +328,7 @@ public final class DaemonPermission extends Permission
             break;
         }
         buf.append(':');
-        buf.append(this.getActions());
+        buf.append(getActions());
         buf.append(']');
 
         this.desc = buf.toString();
@@ -373,16 +355,16 @@ public final class DaemonPermission extends Permission
                        MASK_CONTROL_SHUTDOWN | MASK_CONTROL_RELOAD;
             }
             if (CONTROL_START.equalsIgnoreCase(val)) {
-                mask = mask | MASK_CONTROL_START;
+                mask |= MASK_CONTROL_START;
             }
             else if (CONTROL_STOP.equalsIgnoreCase(val)) {
-                mask = mask | MASK_CONTROL_STOP;
+                mask |= MASK_CONTROL_STOP;
             }
             else if (CONTROL_SHUTDOWN.equalsIgnoreCase(val)) {
-                mask = mask | MASK_CONTROL_SHUTDOWN;
+                mask |= MASK_CONTROL_SHUTDOWN;
             }
             else if (CONTROL_RELOAD.equalsIgnoreCase(val)) {
-                mask = mask | MASK_CONTROL_RELOAD;
+                mask |= MASK_CONTROL_RELOAD;
             }
             else {
                 throw new IllegalArgumentException("Invalid action name \"" +
@@ -392,7 +374,7 @@ public final class DaemonPermission extends Permission
         return mask;
     }
 
-    /** Creates a actions list for a given control permission mask. */
+    /** Creates an actions list for a given control permission mask. */
     private String createControlActions(final int mask)
     {
         final StringBuilder buf = new StringBuilder();

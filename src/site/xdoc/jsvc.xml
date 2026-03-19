@@ -7,7 +7,7 @@
  (the "License"); you may not use this file except in compliance with
  the License.  You may obtain a copy of the License at
 
-      http://www.apache.org/licenses/LICENSE-2.0
+      https://www.apache.org/licenses/LICENSE-2.0
 
  Unless required by applicable law or agreed to in writing, software
  distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,9 +15,9 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 -->
-
-<document>
-
+<document xmlns="http://maven.apache.org/XDOC/2.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/XDOC/2.0 https://maven.apache.org/xsd/xdoc-2.0.xsd">
  <properties>
   <title>Daemon : Java Service</title>
   <author email="jfrederic.clere@fujitsu-siemens.con">Jean-Frederic Clere</author>
@@ -33,7 +33,7 @@
       (e.g. bind to a port &lt; 1024), and then switch identity to a non-privileged user.
       <br/>
       It can run on Win32 via the Cygwin emulation layer (see
-      <a href="http://www.cygwin.com/"> Cygwin</a> for more information),
+      <a href="https://www.cygwin.com/"> Cygwin</a> for more information),
       however Win32 users may prefer to use <a href="procrun.html"> procrun</a>
       instead, which allows the application to run as a Windows Service.
 </p>
@@ -41,7 +41,7 @@
       The sources are located in the src/native/unix subdirectory.
 </p>
 <p>
-      In the future <a href="http://apr.apache.org/"> APR </a> may be used
+      In the future <a href="https://apr.apache.org/"> APR </a> may be used
       to provide more portable platform support.
 </p>
 </section>
@@ -49,20 +49,20 @@
 <section name="Building from source">
 <p>
 To build under a UNIX operating system you will need:
+</p>
 <ul>
   <li>GNU AutoConf (at least version 2.53)</li>
   <li>An ANSI-C compliant compiler (GCC is good)</li>
   <li>GNU Make</li>
   <li>A Java Platform 2 compliant SDK</li>
 </ul>
-
-
+<p>
 You need to build the "configure" program with:
-
+</p>
 <source>
 sh support/buildconf.sh
 </source>
-
+<p>
 (Note it is possible to replace sh by any compatible shell like bash, ksh).
 
 The result should be something like:
@@ -77,12 +77,13 @@ Once the configure script is generated, follow the next section.
 <section name="Building from a release tarball">
 <p>
 To build the binary under a UNIX operating system you will need:
+</p>
 <ul>
   <li>An ANSI-C compliant compiler (GCC is good)</li>
   <li>GNU Make</li>
   <li>A Java Platform 2 compliant SDK</li>
 </ul>
-
+<p>
 You have to specify the <code>JAVA_HOME</code> of the SDK
 either with the <code>--with-java=&lt;dir&gt;</code> parameter or set the <code>JAVA_HOME</code> environment
 to point to your SDK installation. For example:
@@ -177,7 +178,7 @@ Where options include:
     -javaagent:&lt;jarpath&gt;[=&lt;options&gt;]
         load Java programming language agent, see java.lang.instrument
     -procname &lt;procname&gt;
-        use the specified process name (works only for Linux)
+        use the specified process name (works only for Linux and FreeBSD)
     -wait &lt;waittime&gt;
         wait waittime seconds for the service to start
         waittime should multiple of 10 (min=10)
@@ -206,6 +207,10 @@ Where options include:
         Java 9 --patch-module option. Passed as it is to JVM
     --illegal-access=&lt;value&gt;
         Java 9 --illegal-access option. Passed as it is to JVM. Refer java help for possible values.
+    --enable-preview
+        Java 11 --enable-preview option. Passed as it is to JVM
+    --enable-native-access=&lt;module name&gt;
+        Java 21 --enable-native-access option. Passed as it is to JVM
 </source>
 </p>
 <subsection name="Mac OS X universal binaries">
@@ -236,6 +241,7 @@ whereas Tomcat-5.0.x provides a Class whose methods are called by jsvc directly.
 <subsection name="Via Daemon interface">
 <p>
 Do the following:
+</p>
 <ul>
   <li>Write a Class that implements the Daemon interface (MyClass).</li>
   <li>Put it in a jarfile (my.jar).</li>
@@ -245,11 +251,11 @@ Do the following:
   </source>
   </li>
 </ul>
-</p>
 </subsection>
 <subsection name="Directly">
 <p>
 Write a Class (MyClass) that implements the following methods:
+</p>
 <ul>
   <li>void init(String[] arguments): Here open configuration files, create a trace file, create
       ServerSockets, Threads</li>
@@ -257,6 +263,7 @@ Write a Class (MyClass) that implements the following methods:
   <li>void stop(): Inform the Thread to terminate the run(), close the ServerSockets</li>
   <li><code>void destroy()</code>: Destroy any object created in init()</li>
 </ul>
+<p>
 Store it in a jarfile and use as above:
 <source>
 ./jsvc -cp my.jar MyClass
@@ -316,7 +323,7 @@ Note: The controller process uses signals to stop the controlled process.
 
 <subsection name="Downgrading user">
 <p>
-On Linux <code>setuid()</code>/<code>setgid()</code> + capabilities are used. On other unix <code>setgid</code>/<code>initgroups</code> are used.
+On Linux <code>setuid()</code>/<code>setgid()</code> + capabilities are used. On other Unix <code>setgid</code>/<code>initgroups</code> are used.
 
 We have something like:
 <source>

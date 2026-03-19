@@ -5,7 +5,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -40,7 +40,7 @@ struct APXCMDLINEOPT {
     LPWSTR          szName;         /* Long Argument Name */
     LPWSTR          szRegistry;     /* Registry Association */
     LPWSTR          szSubkey;       /* Registry Association */
-    DWORD           dwType;         /* Argument type (string, number, multistring */
+    DWORD           dwType;         /* Argument type (string, number, multi-string */
     LPWSTR          szValue;        /* Return string value  */
     DWORD           dwValue;        /* Return numeric value or present if NIL */
 };

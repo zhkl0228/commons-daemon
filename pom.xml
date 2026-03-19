@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
    Licensed to the Apache Software Foundation (ASF) under one or more
    contributor license agreements.  See the NOTICE file distributed with
@@ -7,7 +7,7 @@
    (the "License"); you may not use this file except in compliance with
    the License.  You may obtain a copy of the License at
 
-       http://www.apache.org/licenses/LICENSE-2.0
+       https://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,16 +18,16 @@
 <project
     xmlns="http://maven.apache.org/POM/4.0.0"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/maven-v4_0_0.xsd">
   <parent>
     <groupId>org.apache.commons</groupId>
     <artifactId>commons-parent</artifactId>
-    <version>53</version>
+    <version>97</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>commons-daemon</groupId>
   <artifactId>commons-daemon</artifactId>
-  <version>1.3.2-SNAPSHOT</version>
+  <version>1.5.2-SNAPSHOT</version>
   <name>Apache Commons Daemon</name>
   <!-- Daemon started in Commons in 2002 with an import of code from Tomcat,
        which is why the NOTICE file has an earlier date than the inceptionYear -->
@@ -41,7 +41,6 @@
   <url>https://commons.apache.org/proper/commons-daemon/</url>
 
   <issueManagement>
-    <system>jira</system>
     <url>https://issues.apache.org/jira/browse/DAEMON</url>
   </issueManagement>
 
@@ -50,6 +49,10 @@
     <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/commons-daemon.git</developerConnection>
     <url>https://gitbox.apache.org/repos/asf?p=commons-daemon.git</url>
   </scm>
+  <ciManagement>
+    <system>GitHub</system>
+    <url>https://github.com/apache/commons-daemon/actions</url>
+  </ciManagement>
 
   <developers>
     <developer>
@@ -93,7 +96,7 @@
       <email>ggregory at apache.org</email>
       <url>https://www.garygregory.com</url>
       <organization>The Apache Software Foundation</organization>
-      <organizationUrl>https://www.apache.org/</organizationUrl>      
+      <organizationUrl>https://www.apache.org/</organizationUrl>
       <roles>
         <role>PMC Member</role>
       </roles>
@@ -114,36 +117,67 @@
 
   <dependencies>
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.13.2</version>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
 
   <properties>
     <!-- Apache Commons Daemon is used by Apache Tomcat. The oldest currently
-         supported Tomcat version is Tomcat 8 which has a minimum Java version
-         of Java 7. It is therefore advisable to check with the Apache Tomcat
+         supported Tomcat version is Tomcat 9 which has a minimum Java version
+         of Java 8. It is therefore advisable to check with the Apache Tomcat
          community before increasing these values. -->
-    <animal-sniffer.signature>java17</animal-sniffer.signature>
-    <commons.daemon.javaversion>1.7</commons.daemon.javaversion>
+    <animal-sniffer.signature>java18</animal-sniffer.signature>
+    <commons.daemon.javaversion>1.8</commons.daemon.javaversion>
     <maven.compiler.source>${commons.daemon.javaversion}</maven.compiler.source>
     <maven.compiler.target>${commons.daemon.javaversion}</maven.compiler.target>
     <commons.componentid>daemon</commons.componentid>
     <commons.module.name>org.apache.commons.daemon</commons.module.name>
-    <commons.release.version>1.3.2</commons.release.version>
+    <commons.release.version>1.5.2</commons.release.version>
     <commons.rc.version>RC1</commons.rc.version>
-    <commons.bc.version>1.3.1</commons.bc.version>
+    <commons.bc.version>1.5.1</commons.bc.version>
     <commons.jira.id>DAEMON</commons.jira.id>
     <commons.jira.pid>12310468</commons.jira.pid>
-    <commons.jacoco.version>0.8.7</commons.jacoco.version>
-    <commons.japicmp.version>0.15.4</commons.japicmp.version>
-    <commons.spotbugs.version>4.6.0.0</commons.spotbugs.version>
+    <project.build.outputTimestamp>2025-12-11T12:00:00Z</project.build.outputTimestamp>
+    <commons.jacoco.haltOnFailure>true</commons.jacoco.haltOnFailure>
+    <!-- JaCoCo: Don't make code coverage worse than: -->
+    <commons.jacoco.haltOnFailure>true</commons.jacoco.haltOnFailure>
+    <commons.jacoco.classRatio>0.12</commons.jacoco.classRatio>
+    <commons.jacoco.instructionRatio>0.00</commons.jacoco.instructionRatio>
+    <commons.jacoco.methodRatio>0.01</commons.jacoco.methodRatio>
+    <commons.jacoco.branchRatio>0.00</commons.jacoco.branchRatio>
+    <commons.jacoco.lineRatio>0.00</commons.jacoco.lineRatio>
+    <commons.jacoco.complexityRatio>0.00</commons.jacoco.complexityRatio>
   </properties>
-
+  <profiles>
+    <!-- Customize the default ASF Commons release profile -->
+    <profile>
+      <id>release</id>
+      <build>
+        <plugins>
+          <!--
+            Disable the default detach-distributions goal.
+            Project specific configuration is provided below.
+          -->
+          <plugin>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-release-plugin</artifactId>
+            <executions>
+              <execution>
+                <!-- Spelling error is deliberate to match parent pom -->
+                <id>detatch-distributions</id>
+                <phase>none</phase>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+  
   <build>
-  <defaultGoal>clean verify apache-rat:check japicmp:cmp javadoc:javadoc</defaultGoal>
+    <defaultGoal>clean verify apache-rat:check japicmp:cmp pmd:check pmd:cpd-check javadoc:javadoc</defaultGoal>
     <pluginManagement>
       <plugins>
         <plugin>
@@ -161,13 +195,14 @@
               <exclude>src/native/unix/config.nice</exclude>
               <exclude>src/native/unix/config.status</exclude>
               <exclude>src/native/unix/config.log</exclude>
+              <!-- autoconf cache - not included in release -->
+              <exclude>src/native/unix/autom4te.cache/**</exclude>
             </excludes>
           </configuration>
         </plugin>
         <plugin>
           <groupId>com.github.spotbugs</groupId>
           <artifactId>spotbugs-maven-plugin</artifactId>
-          <version>${commons.spotbugs.version}</version>
         </plugin>
       </plugins>
     </pluginManagement>
@@ -194,7 +229,7 @@
         <artifactId>commons-release-plugin</artifactId>
         <executions>
           <execution>
-            <id>detatch-distributions</id>
+            <id>detach-distributions</id>
             <phase>deploy</phase>
             <goals>
               <goal>detach-distributions</goal>

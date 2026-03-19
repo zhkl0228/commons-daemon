@@ -13,7 +13,6 @@ import java.net.InterfaceAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -22,21 +21,20 @@ import java.net.SocketException;
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *   https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 /**
  * Sample service implementation for use with Windows Procrun.
  * <p>
  * Use the main() method for running as a Java (external) service.
- * Use the start() and stop() methods for running as a jvm (in-process) service
+ * Use the start() and stop() methods for running as a JVM (in-process) service
  */
 public class ProcrunService implements Runnable {
 
@@ -59,9 +57,9 @@ public class ProcrunService implements Runnable {
         stopFile = file;
     }
 
-    private static File tmpFile(String filename) {
+    private static File tmpFile(String fileName) {
         return new File(System.getProperty("java.io.tmpdir"),
-                filename != null ? filename : "ProcrunService.tmp");
+                fileName != null ? fileName : "ProcrunService.tmp");
     }
 
     private static void usage(){
@@ -172,7 +170,7 @@ public class ProcrunService implements Runnable {
     }
 
     /**
-     * Start the jvm version of the service, and waits for it to complete.
+     * Start the JVM version of the service, and waits for it to complete.
      *
      * @param args optional, arg[0] = timeout (seconds)
      */
@@ -192,8 +190,8 @@ public class ProcrunService implements Runnable {
         if (waitParam != null) {
             wait = Integer.valueOf(waitParam).intValue();
         }
-        log("Starting the thread, wait(seconds): "+wait);
-        thrd = new Thread(new ProcrunService(wait*MS_PER_SEC,file));
+        log("Starting the thread, wait(seconds): " + wait);
+        thrd = new Thread(new ProcrunService(wait * MS_PER_SEC, file));
         thrd.start();
     }
 

@@ -5,7 +5,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -161,7 +161,7 @@ LPWSTR apxLogFile(
     }
     sRet = apxPoolAlloc(hPool, (SIZ_PATHLEN) * sizeof(WCHAR));
     /* Set default level to info */
-    CreateDirectoryW(sPath, NULL);
+    SHCreateDirectoryExW(NULL, sPath, NULL);
 
     lstrlcpyW(sRet, SIZ_PATHMAX, sPath);
     lstrlcatW(sRet, SIZ_PATHMAX, sName);
@@ -194,13 +194,13 @@ HANDLE apxLogOpen(
         if (GetSystemDirectoryW(sPath, MAX_PATH) == 0)
             return INVALID_HANDLE_VALUE;
         lstrlcatW(sPath, MAX_PATH, L"\\LogFiles");
-        if (!CreateDirectoryW(sPath, NULL) && GetLastError() != ERROR_ALREADY_EXISTS) {
-            if (!CreateDirectoryW(sPath, NULL))
+        if (!SHCreateDirectoryExW(NULL, sPath, NULL) && GetLastError() != ERROR_ALREADY_EXISTS) {
+            if (!SHCreateDirectoryExW(NULL, sPath, NULL))
                 return INVALID_HANDLE_VALUE;
         }
         lstrlcatW(sPath, MAX_PATH, L"\\Apache");
-        if (!CreateDirectoryW(sPath, NULL) && GetLastError() != ERROR_ALREADY_EXISTS) {
-            if (!CreateDirectoryW(sPath, NULL))
+        if (!SHCreateDirectoryExW(NULL, sPath, NULL) && GetLastError() != ERROR_ALREADY_EXISTS) {
+            if (!SHCreateDirectoryExW(NULL, sPath, NULL))
                 return INVALID_HANDLE_VALUE;
         }
     }
@@ -232,7 +232,7 @@ HANDLE apxLogOpen(
         return INVALID_HANDLE_VALUE;
     /* Set default level to info */
     h->dwLogLevel = APXLOG_LEVEL_INFO;
-    CreateDirectoryW(sPath, NULL);
+    SHCreateDirectoryExW(NULL, sPath, NULL);
 
     h->sysTime = sysTime;
     lstrlcpyW(h->szPath, MAX_PATH, sPath);
@@ -356,9 +356,9 @@ apxLogWrite(
     APX_LOGENTER();
     if (file && (lf->dwLogLevel <= APXLOG_LEVEL_DEBUG || dwLevel == APXLOG_LEVEL_ERROR)) {
         file = (szFile + lstrlenA(szFile) - 1);
-        while(file != szFile && '\\' != *file && '/' != *file)
+        while (file != szFile && '\\' != *file && '/' != *file)
             file--;
-        if(file != szFile)
+        if (file != szFile)
             file++;
     }
     else

@@ -5,7 +5,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,8 +23,8 @@ IDI_MAINICON         ICON                   "../../resources/procrunw.ico"
 CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "prunsrv.manifest"
 
 1 VERSIONINFO
- FILEVERSION 1,3,2,0
- PRODUCTVERSION 1,3,2,0
+ FILEVERSION 1,5,1,0
+ PRODUCTVERSION 1,5,1,0
  FILEFLAGSMASK 0x3fL
 #if defined(_DEBUG)
  FILEFLAGS 0x03L
@@ -44,7 +44,7 @@ BEGIN
       VALUE "FileDescription", RSTR_PRUNSRV "\0"
       VALUE "FileVersion", PRG_VERSION
       VALUE "InternalName", RSTR_PRUNSRV "\0"
-      VALUE "LegalCopyright", "Copyright (c) 2000-2022 The Apache Software Foundation.\0"
+      VALUE "LegalCopyright", "Copyright (c) 2000-2025 The Apache Software Foundation.\0"
       VALUE "OriginalFilename", "prunsrv.exe\0"
       VALUE "ProductName", RSTR_PRUNSRV "\0"
       VALUE "ProductVersion", PRG_VERSION

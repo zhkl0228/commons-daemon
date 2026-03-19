@@ -5,7 +5,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -41,9 +41,9 @@ BOOL        apxServiceSetNames(APXHANDLE hService, LPCWSTR szImagePath,
                                LPCWSTR szDisplayName, LPCWSTR szDescription,
                                LPCWSTR szUsername, LPCWSTR szPassword);
 
-BOOL        apxServiceSetOptions(APXHANDLE hService, DWORD dwServiceType,
-								 DWORD dwStartType, BOOL bDelayedStart,
-								 DWORD dwErrorControl);
+BOOL        apxServiceSetOptions(APXHANDLE hService, LPCWSTR lpDependencies,
+                                 DWORD dwServiceType, DWORD dwStartType,
+                                 BOOL bDelayedStart, DWORD dwErrorControl);
 
 BOOL        apxServiceControl(APXHANDLE hService, DWORD dwControl, UINT uMsg,
                               LPAPXFNCALLBACK fnControlCallback,

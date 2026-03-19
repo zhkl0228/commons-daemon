@@ -5,7 +5,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -29,8 +29,8 @@ apxSecurityGrantFileAccessToUser(
     WCHAR sUser[SIZ_RESLEN];
     DWORD dwResult;
     PACL pOldDACL;
-    PACL pNewDACL;
-    PSECURITY_DESCRIPTOR pSD;
+    PACL pNewDACL = NULL;
+    PSECURITY_DESCRIPTOR pSD = NULL;
     EXPLICIT_ACCESS ea;
 
     if (szPath) { 
@@ -38,7 +38,7 @@ apxSecurityGrantFileAccessToUser(
     } else {
         dwResult = GetSystemDirectoryW(sPath, MAX_PATH);
         if (dwResult) {
-            return dwResult;
+            goto cleanup;
         }
         lstrlcatW(sPath, MAX_PATH, LOG_PATH_DEFAULT);
     }
@@ -74,13 +74,13 @@ apxSecurityGrantFileAccessToUser(
             NULL,
             &pSD);
     if (dwResult) {
-        return dwResult;
+        goto cleanup;
     }
 
     /* Additional access. */
     ZeroMemory(&ea, sizeof(EXPLICIT_ACCESS));
     ea.grfAccessPermissions = GENERIC_EXECUTE + GENERIC_READ + GENERIC_WRITE;
-    ea.grfAccessMode = GRANT_ACCESS;
+    ea.grfAccessMode = SET_ACCESS;
     ea.grfInheritance = CONTAINER_INHERIT_ACE + OBJECT_INHERIT_ACE;
     ea.Trustee.TrusteeForm = TRUSTEE_IS_NAME;
     ea.Trustee.ptstrName = sUser;
@@ -88,7 +88,7 @@ apxSecurityGrantFileAccessToUser(
     /* Merge old and additional into new ACL. */
     dwResult = SetEntriesInAcl(1, &ea, pOldDACL, &pNewDACL);
     if (dwResult) {
-        return dwResult;
+        goto cleanup;
     }
 
     /* Set the new ACL. */
@@ -101,9 +101,17 @@ apxSecurityGrantFileAccessToUser(
             pNewDACL,
             NULL);
     if (dwResult) {
-        return dwResult;
+        goto cleanup;
     }
 
-    return 0;
+cleanup:
+    if (pSD != NULL) {
+        LocalFree((HLOCAL) pSD);
+    }
+    if (pNewDACL != NULL) {
+        LocalFree((HLOCAL) pNewDACL);
+    }
+
+    return dwResult;
 }
  

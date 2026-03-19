@@ -6,7 +6,7 @@ dnl The ASF licenses this file to You under the Apache License, Version 2.0
 dnl (the "License"); you may not use this file except in compliance with
 dnl the License.  You may obtain a copy of the License at
 dnl
-dnl     http://www.apache.org/licenses/LICENSE-2.0
+dnl     https://www.apache.org/licenses/LICENSE-2.0
 dnl
 dnl Unless required by applicable law or agreed to in writing, software
 dnl distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,7 +15,7 @@ dnl See the License for the specific language governing permissions and
 dnl limitations under the License.
 dnl
 
-AC_DEFUN(AP_SUPPORTED_HOST,[
+AC_DEFUN([AP_SUPPORTED_HOST],[
   AC_MSG_CHECKING([C flags dependant on host system type])
 
   case $host_os in
@@ -183,8 +183,11 @@ AC_DEFUN(AP_SUPPORTED_HOST,[
     ;;
   riscv64)
     CFLAGS="$CFLAGS -DCPU=\\\"riscv64\\\""
-    supported_os="riscv64"
     HOST_CPU=riscv64
+    ;;
+  loongarch64)
+    CFLAGS="$CFLAGS -DCPU=\\\"loongarch64\\\""
+    HOST_CPU=loongarch64
     ;;
   *)
     AC_MSG_RESULT([failed])

@@ -6,7 +6,7 @@
  *  (the "License"); you may not use this file except in compliance with
  *  the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  *  Unless required by applicable law or agreed to in writing, software
  *  distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,7 +14,6 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -27,10 +26,10 @@ import java.util.Properties;
  */
 public class AloneService {
 
-    private Properties prop = null;
-    private Process proc[] = null;
-    private ServiceDaemonReadThread readout[] = null;
-    private ServiceDaemonReadThread readerr[] = null;
+    private Properties prop;
+    private Process[] proc = null;
+    private ServiceDaemonReadThread[] readout = null;
+    private ServiceDaemonReadThread[] readerr = null;
 
     @Override
     protected void finalize() {
@@ -42,16 +41,15 @@ public class AloneService {
      * init and destroy were added in jakarta-tomcat-daemon.
      *
      * @param arguments Unused
-     *
      * @throws Exception If the daemon cannot be initialized
      */
     public void init(String[] arguments) throws Exception {
-        /* Set the err */
-        System.setErr(new PrintStream(new FileOutputStream("/ServiceDaemon.err",true)));
+        // Set the err
+        System.setErr(new PrintStream(new FileOutputStream("/ServiceDaemon.err", true)));
         System.err.println("ServiceDaemon: instance "+this.hashCode()+
                            " init");
 
-        /* read the properties file */
+        // read the properties file
         prop = new Properties();
         try {
             prop.load(new FileInputStream("startfile"));
@@ -76,20 +74,20 @@ public class AloneService {
     }
 
     public void start() {
-        /* Dump a message */
+        // Dump a message
         System.err.println("ServiceDaemon: starting");
 
-        /* Start */
+        // Start
         int i=0;
         for (Enumeration<Object> e = prop.keys(); e.hasMoreElements() ;) {
            String name = (String) e.nextElement();
            System.err.println("ServiceDaemon: starting: " + name + " : " + prop.getProperty(name));
            try {
-               proc[i] = Runtime.getRuntime().exec(prop.getProperty(name));
-           } catch(Exception ex) {
+               proc[i] = Runtime.getRuntime().exec(new String[] {prop.getProperty(name)});
+           } catch (Exception ex) {
                System.err.println("Exception: " + ex);
            }
-           /* Start threads to read from Error and Out streams */
+           // Start threads to read from Error and Out streams
            readerr[i] =
                new ServiceDaemonReadThread(proc[i].getErrorStream());
            readout[i] =
@@ -101,7 +99,7 @@ public class AloneService {
     }
 
     public void stop() {
-        /* Dump a message */
+        // Dump a message
         System.err.println("ServiceDaemon: stopping");
 
         for (int i=0;i<proc.length;i++) {
@@ -110,7 +108,7 @@ public class AloneService {
             proc[i].destroy();
             try {
                 proc[i].waitFor();
-            } catch(InterruptedException ex) {
+            } catch (InterruptedException ex) {
                 System.err.println("ServiceDaemon: exception while stopping:" +
                                     ex);
             }

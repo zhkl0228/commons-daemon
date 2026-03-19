@@ -5,7 +5,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -84,7 +84,7 @@ static LPCWSTR  _s_stop         = L"Stop";
 static LPCWSTR _commands[] = {
     L"ES",      /* 1 Manage Service (default)*/
     L"MS",      /* 2 Monitor Service */
-    L"MR",      /* 3 Monitor Service and start if not runing */
+    L"MR",      /* 3 Monitor Service and start if not running */
     L"MQ",      /* 4 Quit all running Monitor applications */
     NULL
 };
@@ -92,7 +92,7 @@ static LPCWSTR _commands[] = {
 static LPCWSTR _altcmds[] = {
     L"manage",      /* 1 Manage Service (default)*/
     L"monitor",     /* 2 Monitor Service */
-    L"start",       /* 3 Monitor Service and start if not runing */
+    L"start",       /* 3 Monitor Service and start if not running */
     L"quit",        /* 4 Quit all running Monitor applications */
     NULL
 };
@@ -316,13 +316,13 @@ BOOL __generalPropertySave(HWND hDlg)
         bDelayedStart = TRUE;
     }
     else if (i == 1)
-            dwStartType = SERVICE_AUTO_START;
+        dwStartType = SERVICE_AUTO_START;
     else if (i == 2)
         dwStartType = SERVICE_DEMAND_START;
     else if (i == 3)
         dwStartType = SERVICE_DISABLED;
     apxServiceSetNames(hService, NULL, szN, szD, NULL, NULL);
-    apxServiceSetOptions(hService, SERVICE_NO_CHANGE, dwStartType, bDelayedStart, SERVICE_NO_CHANGE);
+    apxServiceSetOptions(hService, NULL, SERVICE_NO_CHANGE, dwStartType, bDelayedStart, SERVICE_NO_CHANGE);
 
     if (!(TST_BIT_FLAG(_propertyChanged, 2)))
         PostMessage(_gui_store->hMainWnd, WM_COMMAND, MAKEWPARAM(IDMS_REFRESH, 0), 0);
@@ -391,12 +391,12 @@ BOOL __generalLogonSave(HWND hDlg)
         }
         lstrlcpyW(_currentEntry->szObjectName, SIZ_RESLEN, STAT_SYSTEM);
         if (IsDlgButtonChecked(hDlg, IDC_PPSLID) == BST_CHECKED) {
-            apxServiceSetOptions(hService,
+            apxServiceSetOptions(hService, NULL,
                 _currentEntry->stServiceStatus.dwServiceType | SERVICE_INTERACTIVE_PROCESS,
                 SERVICE_NO_CHANGE, FALSE, SERVICE_NO_CHANGE);
         }
         else {
-            apxServiceSetOptions(hService,
+            apxServiceSetOptions(hService, NULL,
                 _currentEntry->stServiceStatus.dwServiceType & ~SERVICE_INTERACTIVE_PROCESS,
                 SERVICE_NO_CHANGE, FALSE, SERVICE_NO_CHANGE);
         }

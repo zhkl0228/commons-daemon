@@ -5,7 +5,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -255,10 +255,10 @@ void apxCmdlineFree(
 
 /*
  * Environment variables parsing
- * Each variable is prfixed with PR_
+ * Each variable is prefixed with PR_
  * for example 'set PR_JVM=auto' has a same meaning as providing '--Jvm auto'
  * on the command line.
- * Multistring variables are added to the present conf.
+ * Multi-string variables are added to the present conf.
  */
 void apxCmdlineLoadEnvVars(
     LPAPXCMDLINE lpCmdline)
