@@ -17,10 +17,6 @@
 #include "jsvc.h"
 #include <limits.h>
 #include <glob.h>
-#ifdef __linux__
-__asm__(".symver glob,glob@GLIBC_2.2.5");
-__asm__(".symver globfree,globfree@GLIBC_2.2.5");
-#endif
 
 /* Return the argument of a command line option */
 static char *optional(int argc, char *argv[], int argi)
