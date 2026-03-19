@@ -17,6 +17,10 @@
 #ifndef __JSVC_H__
 #define __JSVC_H__
 
+#ifdef __linux__
+__asm__(".symver memcpy,memcpy@GLIBC_2.2.5");
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
