@@ -17,7 +17,7 @@ PLATFORM="linux/amd64"
 
 COMMON_SETUP='
   sed -i "s|mirrorlist=|#mirrorlist=|g" /etc/yum.repos.d/CentOS-Base.repo
-  sed -i "s|#baseurl=http://mirror.centos.org/centos/$releasever|baseurl=http://vault.centos.org/centos/6.10|g" /etc/yum.repos.d/CentOS-Base.repo
+  sed -i "s|#baseurl=http://mirror.centos.org/centos/[^/]*/|baseurl=http://vault.centos.org/centos/6.10/|g" /etc/yum.repos.d/CentOS-Base.repo
 '
 
 build_64() {

@@ -430,6 +430,10 @@ static arg_data *parse(int argc, char *argv[])
         else if (!strncmp(argv[x], "--enable-native-access=", 23)) {
             args->opts[args->onum++] = strdup(argv[x]);
         }
+        /* Java 25 specific options */
+        else if (!strncmp(argv[x], "--sun-misc-unsafe-memory-access=", 32)) {
+            args->opts[args->onum++] = strdup(argv[x]);
+        }
         else if (*argv[x] == '-') {
             log_error("Invalid option %s", argv[x]);
             return NULL;

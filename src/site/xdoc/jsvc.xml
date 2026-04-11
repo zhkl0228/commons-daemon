@@ -211,6 +211,8 @@ Where options include:
         Java 11 --enable-preview option. Passed as it is to JVM
     --enable-native-access=&lt;module name&gt;
         Java 21 --enable-native-access option. Passed as it is to JVM
+    --sun-misc-unsafe-memory-access=&lt;value&gt;
+        Java 25 --sun-misc-unsafe-memory-access option. Passed as it is to JVM
 </source>
 </p>
 <subsection name="Mac OS X universal binaries">
