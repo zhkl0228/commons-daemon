@@ -27,8 +27,8 @@ build_64() {
     "$CENTOS6_IMAGE" bash -c "
       set -e
       $COMMON_SETUP
-      yum install -y autoconf automake make gcc java-1.8.0-openjdk-devel 2>&1 | grep -E 'Complete|Error'
-      JAVA_HOME=\$(dirname \$(dirname \$(readlink -f \$(which javac))))
+      yum install -y autoconf automake make gcc java-1.8.0-openjdk-devel
+      JAVA_HOME=\$(dirname \$(dirname \$(readlink -f \$(find /usr/lib/jvm -name javac | head -1))))
       AMDIR=\$(find /usr/share/automake* -maxdepth 0 | head -1)
       cd /src/src/native/unix
       make clean 2>/dev/null || true
@@ -36,6 +36,7 @@ build_64() {
       cp \$AMDIR/install-sh \$AMDIR/config.sub \$AMDIR/config.guess support/
       ./configure --with-java=\$JAVA_HOME
       make
+      cp jsvc jsvc.64bit
       echo '==> 64-bit build done'
       file jsvc
       objdump -T jsvc | grep GLIBC | sed 's/.*GLIBC_/GLIBC_/' | awk '{print \$1}' | sort -u
@@ -50,8 +51,8 @@ build_32() {
     "$CENTOS6_IMAGE" bash -c "
       set -e
       $COMMON_SETUP
-      yum install -y autoconf automake make gcc glibc-devel glibc-devel.i686 libgcc.i686 java-1.8.0-openjdk-devel 2>&1 | grep -E 'Complete|Error'
-      JAVA_HOME=\$(dirname \$(dirname \$(readlink -f \$(which javac))))
+      yum install -y autoconf automake make gcc glibc-devel glibc-devel.i686 libgcc.i686 java-1.8.0-openjdk-devel
+      JAVA_HOME=\$(dirname \$(dirname \$(readlink -f \$(find /usr/lib/jvm -name javac | head -1))))
       AMDIR=\$(find /usr/share/automake* -maxdepth 0 | head -1)
       cd /src/src/native/unix
       make clean 2>/dev/null || true
@@ -60,6 +61,7 @@ build_32() {
       CC='gcc -m32' ./configure --with-java=\$JAVA_HOME --build=i686-pc-linux-gnu
       make
       cp jsvc jsvc32
+      if [ -f jsvc.64bit ]; then mv jsvc.64bit jsvc; else rm -f jsvc; fi
       echo '==> 32-bit build done'
       file jsvc32
       objdump -T jsvc32 | grep GLIBC | sed 's/.*GLIBC_/GLIBC_/' | awk '{print \$1}' | sort -u

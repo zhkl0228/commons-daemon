@@ -68,6 +68,106 @@ static void java_abort123(void)
     exit(123);
 }
 
+/*
+ * Read the effective cgroup memory limit (in MB) for the current process.
+ * Returns 0 when there is no effective limit (or the value cannot be read).
+ *
+ * Supports both cgroup v2 (/sys/fs/cgroup/memory.max) and cgroup v1
+ * (/sys/fs/cgroup/memory/memory.limit_in_bytes). This makes autoHeapSize
+ * safe to use inside Docker / Podman / Kubernetes / systemd slices on
+ * CentOS / RHEL, where sysconf(_SC_PHYS_PAGES) reports the host's RAM
+ * rather than the container's quota.
+ */
+static size_t read_cgroup_memory_limit_mb(void)
+{
+    static const char *paths[] = {
+        "/sys/fs/cgroup/memory.max",                   /* cgroup v2 unified */
+        "/sys/fs/cgroup/memory/memory.limit_in_bytes", /* cgroup v1 */
+        NULL
+    };
+    int i;
+    for (i = 0; paths[i] != NULL; i++) {
+        FILE *fp = fopen(paths[i], "r");
+        if (fp == NULL) {
+            continue;
+        }
+        char buf[64];
+        char *line = fgets(buf, sizeof(buf), fp);
+        fclose(fp);
+        if (line == NULL) {
+            continue;
+        }
+        /* cgroup v2 reports the literal string "max" when there is no limit;
+         * continue so that cgroup v1 is still checked on hybrid systems. */
+        if (line[0] < '0' || line[0] > '9') {
+            continue;
+        }
+        unsigned long long bytes = strtoull(line, NULL, 10);
+        if (bytes == 0ULL) {
+            return 0;
+        }
+        /* cgroup v1 represents "unlimited" as a huge sentinel value
+         * (typically LONG_MAX rounded down to a page boundary, e.g.
+         * 9223372036854771712). Anything >= 1 PiB is treated as "no limit". */
+        if (bytes >= (1ULL << 50)) {
+            return 0;
+        }
+        return (size_t)(bytes / (1024ULL * 1024ULL));
+    }
+    return 0;
+}
+
+/*
+ * Compute a safe -Xmx (in MB) from the amount of RAM that is actually
+ * available to this process. The strategy is tiered so that small VPS
+ * boxes leave enough headroom for the JVM's non-heap footprint
+ * (Metaspace, Code Cache, thread stacks, JNI / native libraries, and
+ * Direct Memory) plus the operating system itself. Larger boxes can
+ * dedicate a higher percentage to the heap.
+ *
+ *   <  1 GiB  -> 50%   (e.g.  512M ->   256M heap, 256M reserved)
+ *   <  2 GiB  -> 60%   (e.g.    1G ->   614M heap, 410M reserved)
+ *   <  4 GiB  -> 65%   (e.g.    2G ->  1331M heap, 717M reserved)
+ *   <  8 GiB  -> 70%   (e.g.    4G ->  2867M heap, 1.2G reserved)
+ *   < 16 GiB  -> 75%   (e.g.    8G ->  6144M heap, 2.0G reserved)
+ *   >= 16 GiB -> 80%, but always keep at least 4 GiB reserved
+ *                     (e.g.   16G -> 12288M heap, 4.0G reserved
+ *                            32G -> 26214M heap, 6.0G reserved
+ *                            64G -> 52428M heap, 12G reserved)
+ *
+ * NOTE: -Xmn is intentionally NOT set here. Modern collectors (G1, ZGC,
+ * Shenandoah - the default since JDK 9 / 15) manage the young generation
+ * adaptively and document that hard-coding -Xmn hurts both throughput
+ * and pause times. Users who really want to tune the young generation
+ * (e.g. when running ParallelGC) should still pass -Xmn explicitly.
+ */
+static size_t compute_auto_heap_mb(size_t availMB)
+{
+    size_t heapMB;
+    if (availMB < 1024) {
+        heapMB = availMB * 50 / 100;
+    } else if (availMB < 2048) {
+        heapMB = availMB * 60 / 100;
+    } else if (availMB < 4096) {
+        heapMB = availMB * 65 / 100;
+    } else if (availMB < 8192) {
+        heapMB = availMB * 70 / 100;
+    } else if (availMB < 16384) {
+        heapMB = availMB * 75 / 100;
+    } else {
+        heapMB = availMB * 80 / 100;
+        /* Never claim the last 4 GiB, no matter how big the box is. */
+        if (availMB > 4096 && heapMB > availMB - 4096) {
+            heapMB = availMB - 4096;
+        }
+    }
+    /* Sanity floor: the JVM itself needs a few dozen MB just to boot. */
+    if (heapMB < 64) {
+        heapMB = 64;
+    }
+    return heapMB;
+}
+
 char *java_library(arg_data *args, home_data *data)
 {
     char *libf = NULL;
@@ -263,9 +363,41 @@ bool java_init(arg_data *args, home_data *data)
             break;
         }
     }
+
+    /* Decide the auto-heap size up front so that we can size the option
+     * array correctly. A failure here (e.g. sysconf returning -1) simply
+     * disables auto-heap and lets the JVM fall back to its built-in
+     * ergonomics (which since JDK 8u131+ also honours cgroup limits). */
+    size_t autoHeapMB = 0;
+    if (autoHeapSize) {
+        long pages    = sysconf(_SC_PHYS_PAGES);
+        long pageSize = sysconf(_SC_PAGESIZE);
+        if (pages > 0 && pageSize > 0) {
+            size_t physMB  = (size_t)pages * (size_t)pageSize / 1024 / 1024;
+            size_t cgMB    = read_cgroup_memory_limit_mb();
+            size_t availMB = physMB;
+            if (cgMB > 0 && cgMB < availMB) {
+                log_debug("autoHeapSize: cgroup memory limit %zuM is lower "
+                          "than physical %zuM, using cgroup limit",
+                          cgMB, physMB);
+                availMB = cgMB;
+            }
+            autoHeapMB = compute_auto_heap_mb(availMB);
+            log_debug("autoHeapSize: physical=%zuM available=%zuM "
+                      "-> -Xms=-Xmx=%zuM (%zu%%)",
+                      physMB, availMB, autoHeapMB,
+                      availMB > 0 ? (autoHeapMB * 100 / availMB) : 0);
+        } else {
+            log_debug("autoHeapSize: sysconf(_SC_PHYS_PAGES/_SC_PAGESIZE) "
+                      "returned an invalid value, falling back to JVM "
+                      "default heap ergonomics");
+            autoHeapSize = FALSE;
+        }
+    }
+
     arg.nOptions = args->onum + 5;     /* pid, ppid, version, class and abort */
-    if(autoHeapSize) {
-        arg.nOptions += 3;
+    if (autoHeapSize) {
+        arg.nOptions += 2;             /* InitialHeapSize, MaxHeapSize */
     }
     opt = (JavaVMOption *) malloc(arg.nOptions * sizeof(JavaVMOption));
     for (x = 0; x < args->onum; x++) {
@@ -273,21 +405,15 @@ bool java_init(arg_data *args, home_data *data)
         jsvc_xlate_to_ascii(opt[x].optionString);
         opt[x].extraInfo = NULL;
     }
-    if(autoHeapSize) {
-        size_t physMB = (size_t) sysconf(_SC_PHYS_PAGES) * (size_t) sysconf(_SC_PAGESIZE) / 1024 / 1024;
-        size_t maxMB = physMB * 3 / 4;
-        
-        snprintf(daemonprocid, sizeof(daemonprocid), "-XX:InitialHeapSize=%zuM", maxMB);
+    if (autoHeapSize) {
+        snprintf(daemonprocid, sizeof(daemonprocid),
+                 "-XX:InitialHeapSize=%zuM", autoHeapMB);
         opt[x].optionString = strdup(daemonprocid);
         jsvc_xlate_to_ascii(opt[x].optionString);
         opt[x++].extraInfo  = NULL;
-        
-        snprintf(daemonprocid, sizeof(daemonprocid), "-XX:MaxHeapSize=%zuM", maxMB);
-        opt[x].optionString = strdup(daemonprocid);
-        jsvc_xlate_to_ascii(opt[x].optionString);
-        opt[x++].extraInfo  = NULL;
-        
-        snprintf(daemonprocid, sizeof(daemonprocid), "-Xmn%zuM", maxMB * 3 / 4);
+
+        snprintf(daemonprocid, sizeof(daemonprocid),
+                 "-XX:MaxHeapSize=%zuM", autoHeapMB);
         opt[x].optionString = strdup(daemonprocid);
         jsvc_xlate_to_ascii(opt[x].optionString);
         opt[x++].extraInfo  = NULL;
