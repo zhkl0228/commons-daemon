@@ -126,13 +126,13 @@ static size_t read_cgroup_memory_limit_mb(void)
  * dedicate a higher percentage to the heap.
  *
  *   <  2 GiB  -> auto-heap skipped; JVM ergonomics handle small machines
- *   <  4 GiB  -> 75%   (e.g.    2G ->  1536M heap, 512M reserved)
- *   <  8 GiB  -> 80%   (e.g.    4G ->  3277M heap, 819M reserved)
- *   < 16 GiB  -> 85%   (e.g.    8G ->  6963M heap, 1.2G reserved)
- *   >= 16 GiB -> 88%, but always keep at least 2 GiB reserved
+ *   <  4 GiB  -> 80%   (e.g.    2G ->  1638M heap, 410M reserved)
+ *   <  8 GiB  -> 85%   (e.g.    4G ->  3481M heap, 615M reserved)
+ *   < 16 GiB  -> 90%   (e.g.    8G ->  7372M heap, 820M reserved)
+ *   >= 16 GiB -> 90%, but always keep at least 2 GiB reserved
  *                     (e.g.   16G -> 14336M heap, 2.0G reserved
- *                            32G -> 28262M heap, 3.7G reserved
- *                            64G -> 56320M heap, 7.5G reserved)
+ *                            32G -> 29491M heap, 3.2G reserved
+ *                            64G -> 58982M heap, 6.4G reserved)
  *
  * NOTE: -Xmn is intentionally NOT set here. Modern collectors (G1, ZGC,
  * Shenandoah - the default since JDK 9 / 15) manage the young generation
@@ -144,13 +144,13 @@ static size_t compute_auto_heap_mb(size_t availMB)
 {
     size_t heapMB;
     if (availMB < 4096) {
-        heapMB = availMB * 75 / 100;
-    } else if (availMB < 8192) {
         heapMB = availMB * 80 / 100;
-    } else if (availMB < 16384) {
+    } else if (availMB < 8192) {
         heapMB = availMB * 85 / 100;
+    } else if (availMB < 16384) {
+        heapMB = availMB * 90 / 100;
     } else {
-        heapMB = availMB * 88 / 100;
+        heapMB = availMB * 90 / 100;
         /* Never claim the last 2 GiB, no matter how big the box is. */
         if (availMB > 2048 && heapMB > availMB - 2048) {
             heapMB = availMB - 2048;
