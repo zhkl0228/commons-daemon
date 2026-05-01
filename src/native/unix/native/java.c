@@ -125,15 +125,14 @@ static size_t read_cgroup_memory_limit_mb(void)
  * Direct Memory) plus the operating system itself. Larger boxes can
  * dedicate a higher percentage to the heap.
  *
- *   <  1 GiB  -> 50%   (e.g.  512M ->   256M heap, 256M reserved)
- *   <  2 GiB  -> 60%   (e.g.    1G ->   614M heap, 410M reserved)
- *   <  4 GiB  -> 65%   (e.g.    2G ->  1331M heap, 717M reserved)
- *   <  8 GiB  -> 70%   (e.g.    4G ->  2867M heap, 1.2G reserved)
- *   < 16 GiB  -> 75%   (e.g.    8G ->  6144M heap, 2.0G reserved)
- *   >= 16 GiB -> 80%, but always keep at least 4 GiB reserved
- *                     (e.g.   16G -> 12288M heap, 4.0G reserved
- *                            32G -> 26214M heap, 6.0G reserved
- *                            64G -> 52428M heap, 12G reserved)
+ *   <  2 GiB  -> auto-heap skipped; JVM ergonomics handle small machines
+ *   <  4 GiB  -> 75%   (e.g.    2G ->  1536M heap, 512M reserved)
+ *   <  8 GiB  -> 80%   (e.g.    4G ->  3277M heap, 819M reserved)
+ *   < 16 GiB  -> 85%   (e.g.    8G ->  6963M heap, 1.2G reserved)
+ *   >= 16 GiB -> 88%, but always keep at least 2 GiB reserved
+ *                     (e.g.   16G -> 14336M heap, 2.0G reserved
+ *                            32G -> 28262M heap, 3.7G reserved
+ *                            64G -> 56320M heap, 7.5G reserved)
  *
  * NOTE: -Xmn is intentionally NOT set here. Modern collectors (G1, ZGC,
  * Shenandoah - the default since JDK 9 / 15) manage the young generation
@@ -144,21 +143,17 @@ static size_t read_cgroup_memory_limit_mb(void)
 static size_t compute_auto_heap_mb(size_t availMB)
 {
     size_t heapMB;
-    if (availMB < 1024) {
-        heapMB = availMB * 50 / 100;
-    } else if (availMB < 2048) {
-        heapMB = availMB * 60 / 100;
-    } else if (availMB < 4096) {
-        heapMB = availMB * 65 / 100;
-    } else if (availMB < 8192) {
-        heapMB = availMB * 70 / 100;
-    } else if (availMB < 16384) {
+    if (availMB < 4096) {
         heapMB = availMB * 75 / 100;
-    } else {
+    } else if (availMB < 8192) {
         heapMB = availMB * 80 / 100;
-        /* Never claim the last 4 GiB, no matter how big the box is. */
-        if (availMB > 4096 && heapMB > availMB - 4096) {
-            heapMB = availMB - 4096;
+    } else if (availMB < 16384) {
+        heapMB = availMB * 85 / 100;
+    } else {
+        heapMB = availMB * 88 / 100;
+        /* Never claim the last 2 GiB, no matter how big the box is. */
+        if (availMB > 2048 && heapMB > availMB - 2048) {
+            heapMB = availMB - 2048;
         }
     }
     /* Sanity floor: the JVM itself needs a few dozen MB just to boot. */
@@ -382,11 +377,18 @@ bool java_init(arg_data *args, home_data *data)
                           cgMB, physMB);
                 availMB = cgMB;
             }
-            autoHeapMB = compute_auto_heap_mb(availMB);
-            log_debug("autoHeapSize: physical=%zuM available=%zuM "
-                      "-> -Xms=-Xmx=%zuM (%zu%%)",
-                      physMB, availMB, autoHeapMB,
-                      availMB > 0 ? (autoHeapMB * 100 / availMB) : 0);
+            if (availMB < 2048) {
+                log_debug("autoHeapSize: available=%zuM < 2048M, skipping "
+                          "heap options", availMB);
+                autoHeapSize = FALSE;
+            } else {
+                autoHeapMB = compute_auto_heap_mb(availMB);
+                log_debug("autoHeapSize: physical=%zuM available=%zuM "
+                          "-> -XX:InitialHeapSize=%zuM -XX:MaxHeapSize=%zuM (%zu%%)",
+                          physMB, availMB, autoHeapMB / 4,
+                          autoHeapMB,
+                          availMB > 0 ? (autoHeapMB * 100 / availMB) : 0);
+            }
         } else {
             log_debug("autoHeapSize: sysconf(_SC_PHYS_PAGES/_SC_PAGESIZE) "
                       "returned an invalid value, falling back to JVM "
@@ -406,8 +408,12 @@ bool java_init(arg_data *args, home_data *data)
         opt[x].extraInfo = NULL;
     }
     if (autoHeapSize) {
+        /* Start at 25 % of the max so the JVM commits memory on demand rather
+         * than pre-allocating the full heap at startup. */
+        size_t initHeapMB = autoHeapMB / 4;
+
         snprintf(daemonprocid, sizeof(daemonprocid),
-                 "-XX:InitialHeapSize=%zuM", autoHeapMB);
+                 "-XX:InitialHeapSize=%zuM", initHeapMB);
         opt[x].optionString = strdup(daemonprocid);
         jsvc_xlate_to_ascii(opt[x].optionString);
         opt[x++].extraInfo  = NULL;
